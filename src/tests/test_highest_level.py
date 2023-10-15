@@ -22,7 +22,6 @@ class TestHighestLevel:
         cls.key = os.environ['challonge_key']
         cls.session = challonge.prepare_session(cls.user, cls.key)
 
-
     def test_prepare_session(cls):
         #set up test data
         user = "Testman"
@@ -54,28 +53,23 @@ class TestHighestLevel:
     def test_get_participants_data(cls):
         pilots = challonge.get_participants_data(cls.session, cls.TT_ID)
 
-        #for every pilot, run every enum, return new list of pilots comprehended by all enum values
+        #for every pilot, run every enum, return new list of pilots parsed by all enum values
         pilots_values = [{pval.name:getattr(this_pilot, pval.name) for pval in pilot.PVals if hasattr(this_pilot, pval.name)} 
-                        for this_pilot in pilots]
+                        for this_pilot in pilots]        
         
         #does every pilot have every field in enum?
         pilot_results = [all([pilot_values.get(pval.name) for pval in pilot.PVals]) for pilot_values in pilots_values]
         assert all(pilot_results), f"One of these is missing values: {pilots_values}"
 
-    #test still broken
     def test_get_match_data(cls):
         matches = challonge.get_match_data(cls.session, cls.TT_ID)
 
-        #for every match, run every enum, return new list of matches comprehended by all enum values
-
-        single_match = matches[0]
-        id_name = match.MVals.loser_id.name
-        print(f"{single_match} hasattr({id_name}): {hasattr(single_match, id_name)}\r\n")
-        
+        #for every match, run every enum, return new list of matches comprehended by all enum values        
         matches_values = [{mval.name:getattr(this_match, mval.name) for mval in match.MVals if hasattr(this_match, mval.name)} 
                         for this_match in matches]
-        print(f"matches_values: {matches_values}\r\n")
+
+        #does every match have every field? 
+        match_results = [all([match_values.get(mval.name) for mval in match.MVals]) 
+                         for match_values in matches_values]
         
-        match_results = [print([match_values.get(mval.name) for mval in match.MVals]) for match_values in matches_values]
-        print(f"match_results: {match_results}\r\n")
         assert all(match_results), f"One of these is missing values: {matches_values}"

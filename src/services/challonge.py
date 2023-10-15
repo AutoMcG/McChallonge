@@ -16,7 +16,7 @@ def prepare_session(user: str, api_key: str) -> requests.Session:
 
 def get_tournament_data(session: requests.Session, tournament_id_or_url: str) -> Tournament :
     URL = f'{CHALLONGE_API_V1}tournaments/{tournament_id_or_url}.json'    
-    response = session.get(URL).json()["tournament"]        
+    response = session.get(URL).json()["tournament"]    
     return Tournament(json.dumps(response))
 
 def get_participants_data(session: requests.Session, tournament_id_or_url: str) -> [Pilot]:
@@ -27,6 +27,6 @@ def get_participants_data(session: requests.Session, tournament_id_or_url: str) 
 
 def get_match_data(session: requests.Session, tournament_id_or_url: str) -> [Match]:
     URL = f'{CHALLONGE_API_V1}tournaments/{tournament_id_or_url}/matches.json'
-    response = session.get(URL).json()
+    response = session.get(URL).json()    
     matches = [Match(json.dumps(value["match"])) for value in response]     
     return matches
