@@ -11,8 +11,8 @@ class TestHighestLevel:
 #test challonge class
 
     #real constants
-    TT_URL = "test_testerton_ant"
-    TT_ID = "13581036"
+    TT_URL = ""
+    TT_ID = ""
     user = ""
     key = ""
 
@@ -20,6 +20,8 @@ class TestHighestLevel:
     def setup_class(cls):        
         cls.user = os.environ['challonge_user']
         cls.key = os.environ['challonge_key']
+        cls.TT_URL = os.environ['challonge_tt_url']
+        cls.TT_ID = os.environ['challonge_tt_id']
         cls.session = challonge.prepare_session(cls.user, cls.key)
 
     def test_prepare_session(cls):
