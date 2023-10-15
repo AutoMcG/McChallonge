@@ -16,7 +16,7 @@ def count_outcomes(matches: List[Match], pilots: List[Pilot]) -> List[Pilot]:
     # filter out the completed matches
     complete_matches = [match for match in matches if match.state == "complete"]
 
-    # iterae over the completed matches and update the win/loss counts
+    # iterate over the completed matches and update the win/loss counts
     for match in complete_matches:
         winner = match.winner_id
         loser = match.loser_id
