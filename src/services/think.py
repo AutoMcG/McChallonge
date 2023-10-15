@@ -7,16 +7,25 @@ from ..models.match import Match
 
 from ..services import challonging
 
-def count_outcomes(matches: [Match], pilots: [Pilot]) -> [Pilot]:
-    pilot_outcomes = copy.deepcopy(pilots)    
-    #get matches that are complete
+from typing import List
+
+def count_outcomes(matches: List[Match], pilots: List[Pilot]) -> List[Pilot]:
+    # convert the list of pilots to a dictionary for faster lookup
+    pilot_dict = {pilot.id: pilot for pilot in pilots}
+
+    # filter out the completed matches
     complete_matches = [match for match in matches if match.state == "complete"]
-    #iterate over matches, hit pilot array for each record    
+
+    # iterae over the completed matches and update the win/loss counts
     for match in complete_matches:
         winner = match.winner_id
         loser = match.loser_id
-        pilot_winner = next((pilot for pilot in pilot_outcomes if pilot.id == winner), None)
-        pilot_loser = next((pilot for pilot in pilot_outcomes if pilot.id == loser), None)
-        pilot_winner.wins += 1
-        pilot_loser.losses += 1
-    return pilot_outcomes
+
+        # update win/loss counts
+        pilot_dict[winner].wins += 1
+        pilot_dict[loser].losses += 1
+
+    # optionally? convert the dictionary back to a list if needed
+    updated_pilots = list(pilot_dict.values())
+
+    return updated_pilots
