@@ -1,0 +1,8 @@
+{% for key, value in parent_list.items() %}
+<span class="LeaderboardSpacing">     
+  <span class="LeaderboardText">{{key}}</span>
+  <span class="LeaderboardNumbers">{{value.wins}}</span>
+  <span class="LeaderboardSymbols">- </span>
+  <span class="LeaderboardNumbers">{{value.losses}}</span>
+</span>    
+{% endfor %}

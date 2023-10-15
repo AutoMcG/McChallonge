@@ -1,0 +1,36 @@
+body {
+  background-color: #00ffff;
+}
+
+.player {
+  font-size: 18px;
+  color: #ff00ff;
+}
+
+.VersusText {
+  color: #ff0000;
+  font-size: 44px;
+  font-weight: bold;
+}
+
+.LeaderboardSpacing {
+  display: block;
+}
+
+.LeaderboardText {
+  color: #000ff0;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.LeaderboardNumbers {
+  color: #0f800f;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.LeaderboardSymbols {
+  color: #ac38e6;
+  font-size: 32px;
+  font-weight: bold;
+}

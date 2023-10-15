@@ -12,6 +12,7 @@ class Tournament(object):
 
 #couple with getattr: 
 #getattr(my_match, MVals.id.name)
+#reduces magic
 class TVals(Enum):
     id = 1
     name = 2

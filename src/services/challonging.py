@@ -1,3 +1,4 @@
+import os
 import json
 import requests
 from ..models.tournament import Tournament
@@ -8,6 +9,14 @@ CHALLONGE_API_V1= "https://api.challonge.com/v1"
 
 def prepare_session(user: str, api_key: str) -> requests.Session:
     challonger = (user, api_key)
+    headers = {"Accept" : "application/json", "User-Agent" : "McChallonger", "Accept-Encoding" :"gzip, deflate"}
+    s = requests.Session() 
+    s.auth = challonger
+    s.headers.update(headers)
+    return s
+
+def prepare_session_from_env() -> requests.Session:
+    challonger = (os.environ['challonge_user'], os.environ['challonge_key'])
     headers = {"Accept" : "application/json", "User-Agent" : "McChallonger", "Accept-Encoding" :"gzip, deflate"}
     s = requests.Session() 
     s.auth = challonger

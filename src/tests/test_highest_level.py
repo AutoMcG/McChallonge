@@ -6,6 +6,7 @@ import pytest
 import requests
 
 from ..services import challonging
+from ..services import think
 from ..models import *
 
 class TestHighestLevel:
@@ -74,7 +75,8 @@ class TestHighestLevel:
                         for this_pilot in pilots]        
         
         #does every pilot have every field in enum?
-        pilot_results = [all([pilot_values.get(pval.name) for pval in pilot.PVals]) for pilot_values in pilots_values]
+        pilot_results = [all([pilot_values.get(pval.name) for pval in pilot.PVals]) 
+                         for pilot_values in pilots_values] #does not handle 0 or None values well
         assert all(pilot_results), f"One of these is missing values: {pilots_values}" #todo: report which are missing what lol
 
     def test_get_match_data(cls):
@@ -86,6 +88,12 @@ class TestHighestLevel:
 
         #does every match have every field? 
         match_results = [all([match_values.get(mval.name) for mval in match.MVals]) 
-                         for match_values in matches_values]
+                         for match_values in matches_values] #does not handle 0 or None values well
         
         assert all(match_results), f"One of these is missing values: {matches_values}" #todo: report which are missing what lol
+
+    def test_think_count_outcomes(cls):
+        matches = challonging.get_match_data(cls.session, cls.TT_ID)
+        pilots = challonging.get_participants_data(cls.session, cls.TT_ID)
+        updated_pilots = think.count_outcomes(matches, pilots)
+        print(f'Here is the new data: {[str(mpilot) for mpilot in updated_pilots]}')

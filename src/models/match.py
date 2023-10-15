@@ -12,6 +12,7 @@ class Match(object):
 
 #couple with getattr: 
 #getattr(my_match, MVals.id.name)
+#reduces magic
 class MVals(Enum):
     id = 1
     state = 2

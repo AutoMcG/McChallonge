@@ -1,1 +1,1 @@
-__all__ = ["challonging"]
+__all__ = ["challonging", "think", "templater"]
