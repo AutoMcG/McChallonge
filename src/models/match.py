@@ -10,7 +10,8 @@ class Match(object):
         pp = pprint.PrettyPrinter()
         return pp.pformat(self.__dict__)
 
-#couple with getattr
+#couple with getattr: 
+#getattr(my_match, MVals.id.name)
 class MVals(Enum):
     id = 1
     state = 2

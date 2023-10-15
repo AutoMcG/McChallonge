@@ -1,10 +1,11 @@
 import logging
 import os
 import pprint
+import pytest
 
 import requests
 
-from ..services import challonge
+from ..services import challonging
 from ..models import *
 
 class TestHighestLevel:
@@ -22,7 +23,7 @@ class TestHighestLevel:
         cls.key = os.environ['challonge_key']
         cls.TT_URL = os.environ['challonge_tt_url']
         cls.TT_ID = os.environ['challonge_tt_id']
-        cls.session = challonge.prepare_session(cls.user, cls.key)
+        cls.session = challonging.prepare_session(cls.user, cls.key)
 
     def test_prepare_session(cls):
         #set up test data
@@ -32,7 +33,7 @@ class TestHighestLevel:
         headers = {'User-Agent': 'McChallonger', 'Accept-Encoding': 'gzip, deflate', 'Accept': 'application/json', 'Connection': 'keep-alive'}
 
         #do the thing
-        testSession = challonge.prepare_session(user, key)
+        testSession = challonging.prepare_session(user, key)
 
         #multi-assert appropriate for one action -> multiple data points
         #error string MUST have expected/actual
@@ -44,7 +45,7 @@ class TestHighestLevel:
         assert not errors, "Shit's fucked: \n{}".format("\n".join(errors))
     
     def test_get_tournament_data(cls):
-        tourn_data = challonge.get_tournament_data(cls.session, cls.TT_ID)
+        tourn_data = challonging.get_tournament_data(cls.session, cls.TT_ID)
         errors = []        
         #should be a list comprehension instead of a for loop
         for val in tournament.TVals:
@@ -52,8 +53,21 @@ class TestHighestLevel:
                 errors.append(f"Field in TVals not found in returned tournament json.\nMissing Value:{val}")
         assert not errors, "Shit's fucked: \n{}".format("\n".join(errors))
 
+    def test_fail_tournament_data(cls):
+        with pytest.raises(AssertionError):
+            tourn_data = challonging.get_tournament_data(cls.session, cls.TT_ID)
+            del tourn_data.__dict__["id"]
+            del tourn_data.__dict__["name"]
+            del tourn_data.__dict__["state"]
+            errors = []        
+            #should be a list comprehension instead of a for loop
+            for val in tournament.TVals:
+                if not getattr(tourn_data, val.name, False):
+                    errors.append(f"Field in TVals not found in returned tournament json.\nMissing Value:{val}")
+            assert not errors, "Shit's fucked: \n{}".format("\n".join(errors))
+
     def test_get_participants_data(cls):
-        pilots = challonge.get_participants_data(cls.session, cls.TT_ID)
+        pilots = challonging.get_participants_data(cls.session, cls.TT_ID)
 
         #for every pilot, run every enum, return new list of pilots parsed by all enum values
         pilots_values = [{pval.name:getattr(this_pilot, pval.name) for pval in pilot.PVals if hasattr(this_pilot, pval.name)} 
@@ -61,10 +75,10 @@ class TestHighestLevel:
         
         #does every pilot have every field in enum?
         pilot_results = [all([pilot_values.get(pval.name) for pval in pilot.PVals]) for pilot_values in pilots_values]
-        assert all(pilot_results), f"One of these is missing values: {pilots_values}"
+        assert all(pilot_results), f"One of these is missing values: {pilots_values}" #todo: report which are missing what lol
 
     def test_get_match_data(cls):
-        matches = challonge.get_match_data(cls.session, cls.TT_ID)
+        matches = challonging.get_match_data(cls.session, cls.TT_ID)
 
         #for every match, run every enum, return new list of matches comprehended by all enum values        
         matches_values = [{mval.name:getattr(this_match, mval.name) for mval in match.MVals if hasattr(this_match, mval.name)} 
@@ -74,4 +88,4 @@ class TestHighestLevel:
         match_results = [all([match_values.get(mval.name) for mval in match.MVals]) 
                          for match_values in matches_values]
         
-        assert all(match_results), f"One of these is missing values: {matches_values}"
+        assert all(match_results), f"One of these is missing values: {matches_values}" #todo: report which are missing what lol

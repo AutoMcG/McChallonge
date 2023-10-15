@@ -1,1 +1,1 @@
-__all__ = ["challonge"]
+__all__ = ["challonging"]
