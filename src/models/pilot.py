@@ -10,6 +10,8 @@ class Pilot(object):
         pp = pprint.PrettyPrinter()
         return pp.pformat(self.__dict__)
 
+#couple with getattr: 
+#getattr(my_match, MVals.id.name)
 class PVals(Enum):
     id = 1
     name = 2
