@@ -7,6 +7,7 @@ import requests
 
 from ..services import challonging
 from ..services import think
+from ..services import templater
 from ..models import *
 
 class TestHighestLevel:
@@ -97,3 +98,10 @@ class TestHighestLevel:
         pilots = challonging.get_participants_data(cls.session, cls.TT_ID)
         updated_pilots = think.count_outcomes(matches, pilots)
         print(f'Here is the new data: {[str(mpilot) for mpilot in updated_pilots]}')
+
+    def test_templater_table(cls):
+        matches = challonging.get_match_data(cls.session, cls.TT_ID)
+        pilots = challonging.get_participants_data(cls.session, cls.TT_ID)
+        updated_pilots = think.count_outcomes(matches, pilots)
+        templater.run_table_template(title="FirstTemplateRun", relative_static_dir="static", schema=[value.name for value in pilot.PVals], main_data_source=updated_pilots)
+        pass

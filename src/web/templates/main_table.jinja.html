@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+	<title>{{title}}</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link rel="icon" type="image/png" href="https://colorlib.com/etc/tb/Table_Fixed_Header/images/icons/favicon.ico">
+
+	<link rel="stylesheet" type="text/css" href="{{relative_static_dir}}/bootstrap.min.css">
+
+	<link rel="stylesheet" type="text/css" href="{{relative_static_dir}}/font-awesome.min.css">
+
+	<link rel="stylesheet" type="text/css" href="{{relative_static_dir}}/animate.css">
+
+	<link rel="stylesheet" type="text/css" href="{{relative_static_dir}}/select2.min.css">
+
+	<link rel="stylesheet" type="text/css" href="{{relative_static_dir}}/perfect-scrollbar.css">
+
+	<link rel="stylesheet" type="text/css" href="{{relative_static_dir}}/util.css">
+	<link rel="stylesheet" type="text/css" href="{{relative_static_dir}}/main.css">
+
+	<meta name="robots" content="noindex, follow">
+	<script defer="defer" referrerpolicy="origin" src="{{relative_static_dir}}/s.js"></script>
+	<script
+		nonce="d5dfa406-0e52-4a72-9dd0-10914cfcb7e3">(function (w, d) { !function (a, b, c, d) { a[c] = a[c] || {}; a[c].executed = []; a.zaraz = { deferred: [], listeners: [] }; a.zaraz.q = []; a.zaraz._f = function (e) { return async function () { var f = Array.prototype.slice.call(arguments); a.zaraz.q.push({ m: e, a: f }) } }; for (const g of ["track", "set", "debug"]) a.zaraz[g] = a.zaraz._f(g); a.zaraz.init = () => { var h = b.getElementsByTagName(d)[0], i = b.createElement(d), j = b.getElementsByTagName("title")[0]; j && (a[c].t = b.getElementsByTagName("title")[0].text); a[c].x = Math.random(); a[c].w = a.screen.width; a[c].h = a.screen.height; a[c].j = a.innerHeight; a[c].e = a.innerWidth; a[c].l = a.location.href; a[c].r = b.referrer; a[c].k = a.screen.colorDepth; a[c].n = b.characterSet; a[c].o = (new Date).getTimezoneOffset(); if (a.dataLayer) for (const n of Object.entries(Object.entries(dataLayer).reduce(((o, p) => ({ ...o[1], ...p[1] })), {}))) zaraz.set(n[0], n[1], { scope: "page" }); a[c].q = []; for (; a.zaraz.q.length;) { const q = a.zaraz.q.shift(); a[c].q.push(q) } i.defer = !0; for (const r of [localStorage, sessionStorage]) Object.keys(r || {}).filter((t => t.startsWith("_zaraz_"))).forEach((s => { try { a[c]["z_" + s.slice(7)] = JSON.parse(r.getItem(s)) } catch { a[c]["z_" + s.slice(7)] = r.getItem(s) } })); i.referrerPolicy = "origin"; i.src = "/cdn-cgi/zaraz/s.js?z=" + btoa(encodeURIComponent(JSON.stringify(a[c]))); h.parentNode.insertBefore(i, h) };["complete", "interactive"].includes(b.readyState) ? zaraz.init() : a.addEventListener("DOMContentLoaded", zaraz.init) }(w, d, "zarazData", "script"); })(window, document);</script>
+</head>
+
+<body>
+	<div class="limiter">
+		<div class="container-table100">
+			<div class="wrap-table100">
+				
+				<div class="table100 ver3 m-b-110">
+					<div class="table100-head">
+						<table>
+							<thead>
+								<tr class="row100 head">
+									{% for key in schema %}
+									<th class="cell100 column{{loop.index0}}">{{key}}</th>
+									{% endfor %}
+								</tr>
+							</thead>
+						</table>
+					</div>
+					<div class="table100-body js-pscroll ps ps--active-y">
+						<table>
+							<tbody>								
+								{% for pilot in main_data_source %}
+								<tr class="row100 body">
+									<td class="cell100 column1">{{pilot.id}}</td>
+									<td class="cell100 column2">{{pilot.name}}</td>
+									<td class="cell100 column3">{{pilot.wins}}</td>
+									<td class="cell100 column4">{{pilot.losses}}</td>
+								</tr>
+								{% endfor %}									
+
+			</div>
+		</div>
+	</div>
+
+	<script src="{{relative_static_dir}}/jquery-3.2.1.min.js"></script>
+
+	<script src="{{relative_static_dir}}/popper.js"></script>
+	<script src="{{relative_static_dir}}/bootstrap.min.js"></script>
+
+	<script src="{{relative_static_dir}}/select2.min.js"></script>
+
+	<script src="{{relative_static_dir}}/perfect-scrollbar.min.js"></script>
+	<script>
+		$('.js-pscroll').each(function () {
+			var ps = new PerfectScrollbar(this);
+
+			$(window).on('resize', function () {
+				ps.update();
+			})
+		});
+
+	</script>
+
+	<script src="{{relative_static_dir}}/main.js"></script>
+
+	<script src="{{relative_static_dir}}/app.js" type="text/javascript"></script>
+</body>
+
+</html>
