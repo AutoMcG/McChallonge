@@ -72,14 +72,35 @@ class TestHighestLevel:
         pilots = challonging.get_participants_data(cls.session, cls.TT_ID)
 
         #for every pilot, run every enum, return new list of pilots parsed by all enum values
-        pilots_values = [{pkey.name:getattr(this_pilot, pkey.name) for pkey in pilot.PKeys if hasattr(this_pilot, pkey.name)} 
-                        for this_pilot in pilots]        
-        
-        #does every pilot have every field in enum?
-        pilot_results = [all([pilot_values.get(pkey.name) for pkey in pilot.PKeys]) 
-                         for pilot_values in pilots_values] #does not handle 0 or None values well
-        assert all(pilot_results), f"One of these is missing values: {pilots_values}" #todo: report which are missing what lol
+        pilots_values = [{this_pilot.id: {pkey.name:hasattr(this_pilot, pkey.name) for pkey in pilot.PKeys}}
+                        for this_pilot in pilots]
+        #[
+        # {
+        #  player.id: 
+        #  {
+        #   pkey.name[id] : bool if exists
+        #   pkey.name[name]
+        #  }
+        # }
+        #]
 
+        print(f"values are: {pilots_values}")
+
+        #all(pkey.name[id] == true and pkey.name[name] == true)
+        pilots_results = [this_pilot for this_pilot in pilots_values if all([this_pilot.get(pkey) for pkey in pilot.PKeys])]
+        #pilots_results = [{this_pilot: all([pilots_values.get(this_pilot).get(pkey.name) for pkey in pilot.PKeys])} for this_pilot in pilots_values]
+        print(f"results are: {pilots_results}")
+
+        #[
+        # {
+        #  player.id: bool if all 
+        # }
+        #]
+
+        assert()
+        
+        
+        
     def test_get_match_data(cls):
         matches = challonging.get_match_data(cls.session, cls.TT_ID)
 
