@@ -50,9 +50,9 @@ class TestHighestLevel:
         tourn_data = challonging.get_tournament_data(cls.session, cls.TT_ID)
         errors = []        
         #should be a list comprehension instead of a for loop
-        for val in tournament.TVals:
+        for val in tournament.TKeys:
             if not getattr(tourn_data, val.name, False):
-                errors.append(f"Field in TVals not found in returned tournament json.\nMissing Value:{val}")
+                errors.append(f"Field in tkeys not found in returned tournament json.\nMissing Value:{val}")
         assert not errors, "Shit's fucked: \n{}".format("\n".join(errors))
 
     def test_fail_tournament_data(cls):
@@ -63,20 +63,20 @@ class TestHighestLevel:
             del tourn_data.__dict__["state"]
             errors = []        
             #should be a list comprehension instead of a for loop
-            for val in tournament.TVals:
+            for val in tournament.TKeys:
                 if not getattr(tourn_data, val.name, False):
-                    errors.append(f"Field in TVals not found in returned tournament json.\nMissing Value:{val}")
+                    errors.append(f"Field in tkeys not found in returned tournament json.\nMissing Value:{val}")
             assert not errors, "Shit's fucked: \n{}".format("\n".join(errors))
 
     def test_get_participants_data(cls):
         pilots = challonging.get_participants_data(cls.session, cls.TT_ID)
 
         #for every pilot, run every enum, return new list of pilots parsed by all enum values
-        pilots_values = [{pval.name:getattr(this_pilot, pval.name) for pval in pilot.PVals if hasattr(this_pilot, pval.name)} 
+        pilots_values = [{pkey.name:getattr(this_pilot, pkey.name) for pkey in pilot.PKeys if hasattr(this_pilot, pkey.name)} 
                         for this_pilot in pilots]        
         
         #does every pilot have every field in enum?
-        pilot_results = [all([pilot_values.get(pval.name) for pval in pilot.PVals]) 
+        pilot_results = [all([pilot_values.get(pkey.name) for pkey in pilot.PKeys]) 
                          for pilot_values in pilots_values] #does not handle 0 or None values well
         assert all(pilot_results), f"One of these is missing values: {pilots_values}" #todo: report which are missing what lol
 
@@ -84,11 +84,11 @@ class TestHighestLevel:
         matches = challonging.get_match_data(cls.session, cls.TT_ID)
 
         #for every match, run every enum, return new list of matches comprehended by all enum values        
-        matches_values = [{mval.name:getattr(this_match, mval.name) for mval in match.MVals if hasattr(this_match, mval.name)} 
+        matches_values = [{mkey.name:getattr(this_match, mkey.name) for mkey in match.MKeys if hasattr(this_match, mkey.name)} 
                         for this_match in matches]
 
         #does every match have every field? 
-        match_results = [all([match_values.get(mval.name) for mval in match.MVals]) 
+        match_results = [all([match_values.get(mkey.name) for mkey in match.MKeys]) 
                          for match_values in matches_values] #does not handle 0 or None values well
         
         assert all(match_results), f"One of these is missing values: {matches_values}" #todo: report which are missing what lol
@@ -103,5 +103,5 @@ class TestHighestLevel:
         matches = challonging.get_match_data(cls.session, cls.TT_ID)
         pilots = challonging.get_participants_data(cls.session, cls.TT_ID)
         updated_pilots = think.count_outcomes(matches, pilots)
-        templater.run_table_template(title="FirstTemplateRun", relative_static_dir="static", schema=[value.name for value in pilot.PVals], main_data_source=updated_pilots)
+        templater.run_table_template(title="FirstTemplateRun", relative_static_dir="static", schema=[value.name for value in pilot.PKeys], main_data_source=updated_pilots)
         pass

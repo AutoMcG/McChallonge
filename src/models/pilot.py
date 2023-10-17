@@ -13,9 +13,9 @@ class Pilot(object):
         return pp.pformat(self.__dict__)
 
 #couple with getattr: 
-#getattr(my_match, MVals.id.name)
+#getattr(my_match, PKeys.id.name)
 #reduces magic
-class PVals(Enum):
+class PKeys(Enum):
     id = 1
     name = 2
     wins = 3    #extended data

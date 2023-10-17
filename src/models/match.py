@@ -11,9 +11,9 @@ class Match(object):
         return pp.pformat(self.__dict__)
 
 #couple with getattr: 
-#getattr(my_match, MVals.id.name)
+#getattr(my_match, MKeys.id.name)
 #reduces magic
-class MVals(Enum):
+class MKeys(Enum):
     id = 1
     state = 2
     player1_id = 3
