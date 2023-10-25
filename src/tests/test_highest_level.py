@@ -3,12 +3,14 @@ import logging
 import os
 import pprint
 import pytest
+import time
 
 import requests
 
 from ..services import challonging
 from ..services import think
 from ..services import templater
+from ..services import packager
 from ..models import *
 
 class TestHighestLevel:
@@ -125,4 +127,14 @@ class TestHighestLevel:
         pilots = challonging.get_participants_data(cls.session, cls.TT_ID)
         updated_pilots = think.count_outcomes(matches, pilots)
         templater.run_table_template(title="FirstTemplateRun", relative_static_dir="static", schema=[value.name for value in pilot.PKeys], main_data_source=updated_pilots)
+        pass
+
+    def test_packager(cls):
+        create_files = False #change this to true to actually create files
+        output_path = f'../build/{time.strftime("%Y%m%d-%H%M%S")}/'
+        html_path = f'../build/first_output.html'
+        print(f'cwd is : {os.getcwd()}')
+        all_statics = [this_file.path for this_file in (os.scandir('./web/static/'))]
+        if (create_files):
+            packager.create_output_folder(output_path=output_path, html_path=html_path, static_paths=all_statics)
         pass

@@ -12,7 +12,7 @@ import shutil
 
 #example list build for static path input: all_statics = [this_file.path for this_file in (os.scandir('./web/static/'))] 
 
-def create_output_folder(output_path: str, html_path: str, *static_paths: [str]) -> None:
+def create_output_folder(output_path: str, html_path: str, static_paths: [str]) -> None:
     #create containing folder
     os.makedirs(output_path, exist_ok=True)
     #copy html into it
