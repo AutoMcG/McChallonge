@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import pprint
@@ -71,35 +72,33 @@ class TestHighestLevel:
     def test_get_participants_data(cls):
         pilots = challonging.get_participants_data(cls.session, cls.TT_ID)
 
-        #for every pilot, run every enum, return new list of pilots parsed by all enum values
-        pilots_values = [{this_pilot.id: {pkey.name:hasattr(this_pilot, pkey.name) for pkey in pilot.PKeys}}
-                        for this_pilot in pilots]
-        #[
-        # {
-        #  player.id: 
-        #  {
-        #   pkey.name[id] : bool if exists
-        #   pkey.name[name]
-        #  }
-        # }
-        #]
-
-        print(f"values are: {pilots_values}")
-
-        #all(pkey.name[id] == true and pkey.name[name] == true)
-        pilots_results = [this_pilot for this_pilot in pilots_values if all([this_pilot.get(pkey) for pkey in pilot.PKeys])]
-        #pilots_results = [{this_pilot: all([pilots_values.get(this_pilot).get(pkey.name) for pkey in pilot.PKeys])} for this_pilot in pilots_values]
-        print(f"results are: {pilots_results}")
-
-        #[
-        # {
-        #  player.id: bool if all 
-        # }
-        #]
-
-        assert()
+        #do all pilots have all values? 
+        #give me a list of all pilots that did NOT have all values
+        bad_pilots = [this_pilot 
+                         for this_pilot 
+                         in pilots 
+                            if (any(
+                                [not hasattr(this_pilot, pkey.name) 
+                                 for pkey in pilot.PKeys]))]
         
-        
+        assert len(bad_pilots) == 0, f"Some pilots were missing values: {[str(result) for result in bad_pilots]}"
+
+    def test_fail_participants_data(cls):
+        with pytest.raises(AssertionError):
+            pilots = challonging.get_participants_data(cls.session, cls.TT_ID)
+
+            del pilots[0].__dict__["id"]
+
+            #do all pilots have all values? 
+            #give me a list of all pilots that did NOT have all values
+            bad_pilots = [this_pilot 
+                             for this_pilot 
+                             in pilots 
+                                if (any(
+                                    [not hasattr(this_pilot, pkey.name) 
+                                     for pkey in pilot.PKeys]))]
+
+            assert len(bad_pilots) == 0, f"Some pilots were missing values: {[str(result) for result in bad_pilots]}"
         
     def test_get_match_data(cls):
         matches = challonging.get_match_data(cls.session, cls.TT_ID)
