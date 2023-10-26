@@ -131,10 +131,9 @@ class TestHighestLevel:
 
     def test_packager(cls):
         create_files = False #change this to true to actually create files
-        output_path = f'../build/{time.strftime("%Y%m%d-%H%M%S")}/'
-        html_path = f'../build/first_output.html'
-        print(f'cwd is : {os.getcwd()}')
-        all_statics = [this_file.path for this_file in (os.scandir('./web/static/'))]
+        output_path = f'build/{time.strftime("%Y%m%d-%H%M%S")}/'
+        html_path = f'build/first_output.html'
+        all_statics = [this_file.path for this_file in (os.scandir('src/web/static/'))]
         if (create_files):
             packager.create_output_folder(output_path=output_path, html_path=html_path, static_paths=all_statics)
         pass
