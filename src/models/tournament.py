@@ -11,9 +11,9 @@ class Tournament(object):
         return pp.pformat(self.__dict__)
 
 #couple with getattr: 
-#getattr(my_match, MVals.id.name)
+#getattr(my_match, TKeys.id.name)
 #reduces magic
-class TVals(Enum):
+class TKeys(Enum):
     id = 1
     name = 2
     state = 3

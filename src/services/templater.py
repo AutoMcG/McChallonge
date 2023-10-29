@@ -1,7 +1,7 @@
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 env = Environment(
-    loader = FileSystemLoader(searchpath="./web/templates/"),         
+    loader = FileSystemLoader(["src/web/templates/", "web/templates"]), #it feels dirty to do this just to support running tests from this or that dir...
     autoescape=select_autoescape()
     )
 

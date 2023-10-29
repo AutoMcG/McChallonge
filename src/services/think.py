@@ -16,16 +16,10 @@ def count_outcomes(matches: List[Match], pilots: List[Pilot]) -> List[Pilot]:
     # filter out the completed matches
     complete_matches = [match for match in matches if match.state == "complete"]
 
-    # iterate over the completed matches and update the win/loss counts
-    for match in complete_matches:
-        winner = match.winner_id
-        loser = match.loser_id
-
-        # update win/loss counts
+    def update_dict(winner, loser):        
         pilot_dict[winner].wins += 1
         pilot_dict[loser].losses += 1
 
-    # optionally? convert the dictionary back to a list if needed
-    updated_pilots = list(pilot_dict.values())
+    [update_dict(match.winner_id, match.loser_id) for match in complete_matches]
 
-    return updated_pilots
+    return list(pilot_dict.values())
