@@ -10,7 +10,7 @@ import shutil
 #                   ---*.js
 #                   ---*.css
 
-#example list build for static path input: all_statics = [this_file.path for this_file in (os.scandir('./web/static/'))] 
+#example list build for static path input: all_statics = [this_file.path for this_file in (os.scandir('src/web/static/'))]
 
 def create_output_folder(output_path: str, html_path: str, static_paths: [str]) -> None:
     #create containing folders

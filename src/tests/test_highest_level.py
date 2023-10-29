@@ -120,19 +120,19 @@ class TestHighestLevel:
         pilots = challonging.get_participants_data(cls.session, cls.TT_ID)
         updated_pilots = think.count_outcomes(matches, pilots)
         print(f'Here is the new data: {[str(mpilot) for mpilot in updated_pilots]}')
-        pass
+        assert False
 
     def test_templater_table(cls):
-        matches = challonging.get_match_data(cls.session, cls.TT_ID)
+        matches = challonging.get_match_data(cls.session, cls.TT_ID)        
         pilots = challonging.get_participants_data(cls.session, cls.TT_ID)
         updated_pilots = think.count_outcomes(matches, pilots)
         templater.run_table_template(title="FirstTemplateRun", relative_static_dir="static", schema=[value.name for value in pilot.PKeys], main_data_source=updated_pilots)
         pass
 
     def test_packager(cls):
-        create_files = False #change this to true to actually create files
+        create_files = False #change this to true to actually create files        
         output_path = f'build/{time.strftime("%Y%m%d-%H%M%S")}/'
-        html_path = f'build/first_output.html'
+        html_path = f'build/first_output.html' #dependent on static file existing
         all_statics = [this_file.path for this_file in (os.scandir('src/web/static/'))]
         if (create_files):
             packager.create_output_folder(output_path=output_path, html_path=html_path, static_paths=all_statics)
