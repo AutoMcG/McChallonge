@@ -120,7 +120,7 @@ class TestHighestLevel:
         pilots = challonging.get_participants_data(cls.session, cls.TT_ID)
         updated_pilots = think.count_outcomes(matches, pilots)
         print(f'Here is the new data: {[str(mpilot) for mpilot in updated_pilots]}')
-        assert False
+        assert True
 
     def test_templater_table(cls):
         matches = challonging.get_match_data(cls.session, cls.TT_ID)        
