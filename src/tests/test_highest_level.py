@@ -126,7 +126,7 @@ class TestHighestLevel:
         matches = challonging.get_match_data(cls.session, cls.TT_ID)        
         pilots = challonging.get_participants_data(cls.session, cls.TT_ID)
         updated_pilots = think.count_outcomes(matches, pilots)
-        print(templater.run_table_template(title="FirstTemplateRun", relative_static_dir="static", schema=[value.name for value in pilot.PKeys], main_data_source=updated_pilots))
+        print(templater.run_table_template(table_template_name="main_table.jinja.html", title="FirstTemplateRun", relative_static_dir="static", schema=[value.name for value in pilot.PKeys], main_data_source=updated_pilots))
         pass
 
     def test_packager(cls):
