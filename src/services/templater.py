@@ -5,7 +5,6 @@ env = Environment(
     autoescape=select_autoescape()
     )
 
-def run_table_template(title: str, relative_static_dir: str, schema, main_data_source):
-    template = env.get_template("main_table.jinja.html")
-    print(template.render(title = title, relative_static_dir = relative_static_dir, schema = schema, main_data_source = main_data_source))
-    pass
+def run_table_template(table_template_name: str, title: str, relative_static_dir: str, schema, main_data_source) -> str:
+    template = env.get_template(table_template_name)
+    return template.render(title = title, relative_static_dir = relative_static_dir, schema = schema, main_data_source = main_data_source)
