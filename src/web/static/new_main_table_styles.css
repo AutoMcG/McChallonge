@@ -1,0 +1,25 @@
+.flex-table {
+    width: 100%;
+}
+
+.flex-table-header, .flex-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.flex-header-item, .flex-cell {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    text-align: center;
+}
+
+.flex-table-header {
+    background-color: #f1f1f1;
+    font-weight: bold;
+}
+
+.flex-row:nth-child(even) {
+    background-color: #f9f9f9;
+}

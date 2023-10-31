@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>{{title}}</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" type="text/css" href="{{relative_static_dir}}/new_main_table_styles.css">
+
+</head>
+
+<body>
+    <div class="flex-table">
+        <!-- Table Header -->
+        <div class="flex-table-header">
+            {% for key in schema %}
+            <div class="flex-header-item">{{ key }}</div>
+            {% endfor %}
+        </div>
+
+        <!-- Table Body -->
+        <div class="flex-table-body">
+            {% for pilot in main_data_source %}
+            <div class="flex-row">
+                <div class="flex-cell">{{ pilot.id }}</div>
+                <div class="flex-cell">{{ pilot.name }}</div>
+                <div class="flex-cell">{{ pilot.wins }}</div>
+                <div class="flex-cell">{{ pilot.losses }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+
+</html>

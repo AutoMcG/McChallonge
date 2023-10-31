@@ -17,7 +17,10 @@ def create_output_folder(output_path: str, html_path: str, static_paths: [str]) 
     static_output = os.path.join(output_path, 'static/')
     os.makedirs(static_output, exist_ok=True)
     #copy html into it
-    shutil.copy(html_path, output_path)
+    try:
+        shutil.copy(html_path, output_path)        
+    except shutil.SameFileError:
+        pass
     #copy all the other shit
     for path in static_paths:
         shutil.copy(path, static_output)

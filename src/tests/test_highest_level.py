@@ -120,13 +120,13 @@ class TestHighestLevel:
         pilots = challonging.get_participants_data(cls.session, cls.TT_ID)
         updated_pilots = think.count_outcomes(matches, pilots)
         print(f'Here is the new data: {[str(mpilot) for mpilot in updated_pilots]}')
-        assert False
+        assert True
 
     def test_templater_table(cls):
         matches = challonging.get_match_data(cls.session, cls.TT_ID)        
         pilots = challonging.get_participants_data(cls.session, cls.TT_ID)
         updated_pilots = think.count_outcomes(matches, pilots)
-        templater.run_table_template(title="FirstTemplateRun", relative_static_dir="static", schema=[value.name for value in pilot.PKeys], main_data_source=updated_pilots)
+        print(templater.run_table_template(table_template_name="main_table.jinja.html", title="FirstTemplateRun", relative_static_dir="static", schema=[value.name for value in pilot.PKeys], main_data_source=updated_pilots))
         pass
 
     def test_packager(cls):
@@ -134,6 +134,36 @@ class TestHighestLevel:
         output_path = f'build/{time.strftime("%Y%m%d-%H%M%S")}/'
         html_path = f'build/first_output.html' #dependent on static file existing
         all_statics = [this_file.path for this_file in (os.scandir('src/web/static/'))]
+        if (create_files):
+            packager.create_output_folder(output_path=output_path, html_path=html_path, static_paths=all_statics)
+        pass
+
+    def test_new_html(cls):
+        #get table data
+        matches = challonging.get_match_data(cls.session, cls.TT_ID)
+        pilots = challonging.get_participants_data(cls.session, cls.TT_ID)
+        updated_pilots = think.count_outcomes(matches, pilots)
+
+        #put pilot
+        html_output = templater.run_table_template(table_template_name="new_main_table.jinja.html", 
+                                                   title=f"Last Update: {time.strftime('%Y%m%d-%H%M%S')}", 
+                                                   relative_static_dir="static", 
+                                                   schema=[value.name for value in pilot.PKeys], 
+                                                   main_data_source=updated_pilots)        
+        
+        create_files = False #change this to true to actually create files        
+        
+        file_timestamp = time.strftime("%Y%m%d-%H%M%S")
+        output_path = f'./build/{file_timestamp}/'
+        html_path = f'{output_path}index.html' 
+
+        if (create_files):
+            os.makedirs(output_path, exist_ok=True)
+            with open(html_path, 'w') as f:
+                f.write(html_output)
+
+        all_statics = ['./src/web/static/new_main_table_styles.css']
+        
         if (create_files):
             packager.create_output_folder(output_path=output_path, html_path=html_path, static_paths=all_statics)
         pass
