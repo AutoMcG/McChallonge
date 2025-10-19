@@ -2,14 +2,14 @@ import requests
 import copy
 
 from ..models.tournament import Tournament
-from ..models.pilot import Pilot
+from ..models.participant import Participant
 from ..models.match import Match
 
 from ..services import challonging
 
 from typing import List
 
-def count_outcomes(matches: List[Match], pilots: List[Pilot]) -> List[Pilot]:
+def count_outcomes(matches: List[Match], pilots: List[Participant]) -> List[Participant]:
     # convert the list of pilots to a dictionary for faster lookup
     pilot_dict = {pilot.id: pilot for pilot in pilots}
 
