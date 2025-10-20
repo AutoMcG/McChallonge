@@ -120,7 +120,7 @@ class UnitTestChallonging:
         monkeypatch.setenv("CHALLONGE_CLIENT_ID", "test_id")
         monkeypatch.setenv("CHALLONGE_CLIENT_SECRET", "test_secret")
         
-        with patch("..services.challonging.get_challonge_oauth_session") as mock_oauth:
+        with patch("mcchallonge.services.challonging.get_challonge_oauth_session") as mock_oauth:
             mock_oauth.return_value = MagicMock(spec=OAuth2Session)
             session = challonging.prepare_oauth_session()
             

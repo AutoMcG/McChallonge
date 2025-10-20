@@ -35,6 +35,7 @@ setup(
     entry_points={
         "console_scripts": [
             "mcchallonge-oauth=mcchallonge.cli.challonge_oauth_cli:main",
+            "mcchallonge-dashboard=mcchallonge.cli.generate_dashboard:main",
         ],
     },
 )

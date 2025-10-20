@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="./static/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="./static/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #2c3e50;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: var(--dark-color);
+            padding: 20px;
+        }
+        
+        .tournament-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 30px;
+            border-radius: 15px 15px 0 0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+        
+        .tournament-header h1 {
+            margin: 0;
+            font-weight: 700;
+            font-size: 2.5rem;
+        }
+        
+        .tournament-header p {
+            margin: 10px 0 0;
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .tournament-header .status {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .status-underway {
+            background-color: var(--accent-color);
+            color: white;
+        }
+        
+        .status-completed {
+            background-color: #27ae60;
+            color: white;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s;
+            margin-bottom: 30px;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-header {
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 15px 20px;
+            font-weight: 600;
+        }
+        
+        .table {
+            margin-bottom: 0;
+        }
+        
+        .table th {
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            font-weight: 600;
+            border-top: none;
+        }
+        
+        .participants-table tbody tr:hover {
+            background-color: rgba(52, 152, 219, 0.05);
+        }
+        
+        .match {
+            display: flex;
+            padding: 15px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .match:last-child {
+            border-bottom: none;
+        }
+        
+        .match .players {
+            display: flex;
+            flex: 1;
+        }
+        
+        .match .player {
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-right: 15px;
+            flex: 1;
+            background-color: var(--light-color);
+        }
+        
+        .match .player.winner {
+            background-color: rgba(39, 174, 96, 0.2);
+            border-left: 4px solid #27ae60;
+            font-weight: 600;
+        }
+        
+        .match .vs {
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            color: var(--secondary-color);
+            font-weight: 700;
+        }
+        
+        .match .match-info {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-width: 150px;
+            text-align: center;
+        }
+        
+        .match .state {
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+        
+        .match .state-complete {
+            background-color: #27ae60;
+            color: white;
+        }
+        
+        .match .state-pending {
+            background-color: #f39c12;
+            color: white;
+        }
+        
+        .match .date {
+            margin-top: 5px;
+            font-size: 0.85rem;
+            color: #7f8c8d;
+        }
+        
+        .logo-container {
+            position: absolute;
+            right: 20px;
+            bottom: 20px;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .logo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            padding: 20px 0;
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 767px) {
+            .match {
+                flex-direction: column;
+            }
+            
+            .match .match-info {
+                margin-top: 15px;
+            }
+            
+            .tournament-header {
+                padding: 20px;
+            }
+            
+            .tournament-header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .logo-container {
+                width: 80px;
+                height: 80px;
+                bottom: 10px;
+                right: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Tournament Header -->
+        {% if not show_only or show_only == "tournament" %}
+        <div class="tournament-header">
+            <h1>{{ tournament.name }}</h1>
+            <p>Tournament ID: {{ tournament.id }}</p>
+            <div class="status {{ 'status-completed' if tournament.state == 'completed' else 'status-underway' }}">
+                {{ tournament.state|capitalize }}
+            </div>
+            
+            <!-- Tournament Logo/Image - You can customize this -->
+            <div class="logo-container">
+                <img src="{{ logo_url|default('https://via.placeholder.com/150x150.png?text=Tournament') }}" alt="Tournament Logo">
+            </div>
+        </div>
+        {% elif show_only == "participants" %}
+        <div class="tournament-header">
+            <h1>{{ tournament.name }} - Participants</h1>
+            <p>Tournament ID: {{ tournament.id }}</p>
+        </div>
+        {% elif show_only == "matches" %}
+        <div class="tournament-header">
+            <h1>{{ tournament.name }} - Matches</h1>
+            <p>Tournament ID: {{ tournament.id }}</p>
+        </div>
+        {% endif %}
+        
+        {% if not show_only or show_only == "participants" %}
+        <div class="row">
+            <!-- Participants Table -->
+            <div class="col-lg-{% if show_only == "participants" %}12{% else %}8{% endif %} col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-users me-2"></i> Participants
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table participants-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Name</th>
+                                    <th>Wins</th>
+                                    <th>Losses</th>
+                                    <th>Win Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for participant in participants %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>{{ participant.name }}</td>
+                                    <td>{{ participant.wins }}</td>
+                                    <td>{{ participant.losses }}</td>
+                                    <td>
+                                        {% if participant.wins + participant.losses > 0 %}
+                                            {{ "%.0f"|format(participant.wins / (participant.wins + participant.losses) * 100) }}%
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tournament Info -->
+            {% if not show_only %}
+            <div class="col-lg-4 col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-info-circle me-2"></i> Tournament Details
+                    </div>
+                    <div class="card-body">
+                        <p><strong>URL:</strong> <a href="https://challonge.com/{{ tournament.url }}" target="_blank">{{ tournament.url }}</a></p>
+                        <p><strong>Started:</strong> {{ tournament.started_at|default('Not started') }}</p>
+                        <p><strong>Completed:</strong> {{ tournament.completed_at|default('In progress') }}</p>
+                        
+                        <!-- Custom Content Area -->
+                        {% if custom_content %}
+                        <div class="mt-4 pt-4 border-top">
+                            <h5>Additional Information</h5>
+                            {{ custom_content|safe }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <!-- Matches Section -->
+        {% if not show_only or show_only == "matches" %}
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-gamepad me-2"></i> Matches
+            </div>
+            <div class="card-body p-0">
+                {% if matches %}
+                <div class="matches-container">
+                    {% for match in matches %}
+                    <div class="match">
+                        <div class="players">
+                            <!-- Player 1 -->
+                            {% set player1 = get_participant_by_id(match.player1_id) %}
+                            <div class="player {{ 'winner' if match.winner_id == match.player1_id }}">
+                                {{ player1.name if player1 else 'Player 1' }}
+                            </div>
+                            
+                            <div class="vs">VS</div>
+                            
+                            <!-- Player 2 -->
+                            {% set player2 = get_participant_by_id(match.player2_id) %}
+                            <div class="player {{ 'winner' if match.winner_id == match.player2_id }}">
+                                {{ player2.name if player2 else 'Player 2' }}
+                            </div>
+                        </div>
+                        
+                        <div class="match-info">
+                            <span class="state {{ 'state-complete' if match.state == 'complete' else 'state-pending' }}">
+                                {{ match.state|capitalize }}
+                            </span>
+                            {% if match.completed_at %}
+                            <span class="date">{{ match.completed_at }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <p>No matches available.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="footer">
+            <p>Generated by McChallonge on {{ current_date }}</p>
+            <p>
+                {% if show_only == "participants" %}
+                <a href="./index.html">Full Dashboard</a> | 
+                <a href="./matches">View Matches</a>
+                {% elif show_only == "matches" %}
+                <a href="./index.html">Full Dashboard</a> | 
+                <a href="./participants">View Participants</a>
+                {% else %}
+                <a href="./participants">Participants Only</a> | 
+                <a href="./matches">Matches Only</a>
+                {% endif %}
+                | <a href="https://github.com/AutoMcG/McChallonge" target="_blank">GitHub Repository</a>
+            </p>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="./static/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
