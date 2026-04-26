@@ -1,7 +1,3 @@
-import requests
-import copy
-
-from ..models.tournament import Tournament
 from ..models.participant import Participant
 from ..models.match import Match
 
