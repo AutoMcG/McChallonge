@@ -11,6 +11,24 @@ from ..models.tournament import Tournament
 from ..models.participant import Participant
 from ..models.match import Match
 
+
+def write_json_outputs(output_file, tournament, participants, matches):
+    """Write normalized JSON artifacts next to the generated dashboard HTML."""
+    output_dir = os.path.dirname(output_file) or os.getcwd()
+    os.makedirs(output_dir, exist_ok=True)
+
+    artifacts = {
+        "tournament.json": tournament.__dict__,
+        "participants.json": [participant.__dict__ for participant in participants],
+        "matches.json": [match.__dict__ for match in matches],
+    }
+
+    for file_name, payload in artifacts.items():
+        file_path = os.path.join(output_dir, file_name)
+        with open(file_path, 'w', encoding='utf-8') as output_handle:
+            json.dump(payload, output_handle, indent=2)
+        print(f"Wrote {file_name}: {os.path.abspath(file_path)}")
+
 def main():
     """CLI tool to generate tournament dashboard HTML files"""
     load_dotenv()
@@ -127,6 +145,9 @@ def main():
         
         print(f"Fetching matches for tournament {tournament.name}...")
         matches = get_match_data(session, args.tournament_id)
+
+        print("Writing tournament data JSON artifacts...")
+        write_json_outputs(args.output, tournament, participants, matches)
     
     # Process the data (count wins/losses)
     print("Processing match outcomes...")

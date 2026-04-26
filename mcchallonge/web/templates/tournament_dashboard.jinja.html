@@ -1,15 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    {% set asset_prefix = path_prefix|default('./') %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ title }}</title>
     
     <!-- Bootstrap 5 -->
-    <link href="./static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ asset_prefix }}static/css/bootstrap.min.css" rel="stylesheet">
     
     <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="./static/css/all.min.css">
+    <link rel="stylesheet" href="{{ asset_prefix }}static/css/all.min.css">
     
     <style>
         :root {
@@ -198,6 +199,31 @@
             color: #7f8c8d;
             font-size: 0.9rem;
         }
+
+        .controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .cache-meta {
+            opacity: 0.95;
+            font-size: 0.95rem;
+            margin: 0;
+        }
+
+        .status-message {
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .empty-state {
+            color: #7f8c8d;
+            text-align: center;
+            padding: 20px;
+        }
         
         @media (max-width: 767px) {
             .match {
@@ -226,15 +252,32 @@
     </style>
 </head>
 <body>
+    {% set is_client = client_rendered|default(false) %}
     <div class="container">
+        {% if is_client %}
+        <div id="status-message" class="alert status-message" role="alert"></div>
+        {% endif %}
+
         <!-- Tournament Header -->
         {% if not show_only or show_only == "tournament" %}
         <div class="tournament-header">
-            <h1>{{ tournament.name }}</h1>
-            <p>Tournament ID: {{ tournament.id }}</p>
-            <div class="status {{ 'status-completed' if tournament.state == 'completed' else 'status-underway' }}">
+            {% if is_client %}
+            <h1 id="tournament-name">Tournament Dashboard</h1>
+            <p id="tournament-id">Tournament ID: Not loaded</p>
+            <div id="tournament-status" class="status status-underway">Unknown</div>
+            <div class="controls">
+                <button id="refresh-cache-btn" class="btn btn-light btn-sm" type="button">
+                    <i class="fas fa-sync-alt me-1"></i> Update Local Cache
+                </button>
+                <p id="cache-meta" class="cache-meta">Local cache has not been loaded yet.</p>
+            </div>
+            {% else %}
+            <h1 id="tournament-name">{{ tournament.name }}</h1>
+            <p id="tournament-id">Tournament ID: {{ tournament.id }}</p>
+            <div id="tournament-status" class="status {{ 'status-completed' if tournament.state == 'completed' else 'status-underway' }}">
                 {{ tournament.state|capitalize }}
             </div>
+            {% endif %}
             
             <!-- Tournament Logo/Image - You can customize this -->
             <div class="logo-container">
@@ -243,13 +286,35 @@
         </div>
         {% elif show_only == "participants" %}
         <div class="tournament-header">
-            <h1>{{ tournament.name }} - Participants</h1>
-            <p>Tournament ID: {{ tournament.id }}</p>
+            {% if is_client %}
+            <h1 id="tournament-name">Participants</h1>
+            <p id="tournament-id">Tournament ID: Not loaded</p>
+            <div class="controls">
+                <button id="refresh-cache-btn" class="btn btn-light btn-sm" type="button">
+                    <i class="fas fa-sync-alt me-1"></i> Update Local Cache
+                </button>
+                <p id="cache-meta" class="cache-meta">Local cache has not been loaded yet.</p>
+            </div>
+            {% else %}
+            <h1 id="tournament-name">{{ tournament.name }} - Participants</h1>
+            <p id="tournament-id">Tournament ID: {{ tournament.id }}</p>
+            {% endif %}
         </div>
         {% elif show_only == "matches" %}
         <div class="tournament-header">
-            <h1>{{ tournament.name }} - Matches</h1>
-            <p>Tournament ID: {{ tournament.id }}</p>
+            {% if is_client %}
+            <h1 id="tournament-name">Matches</h1>
+            <p id="tournament-id">Tournament ID: Not loaded</p>
+            <div class="controls">
+                <button id="refresh-cache-btn" class="btn btn-light btn-sm" type="button">
+                    <i class="fas fa-sync-alt me-1"></i> Update Local Cache
+                </button>
+                <p id="cache-meta" class="cache-meta">Local cache has not been loaded yet.</p>
+            </div>
+            {% else %}
+            <h1 id="tournament-name">{{ tournament.name }} - Matches</h1>
+            <p id="tournament-id">Tournament ID: {{ tournament.id }}</p>
+            {% endif %}
         </div>
         {% endif %}
         
@@ -273,6 +338,11 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                {% if is_client %}
+                                <tr>
+                                    <td colspan="5" class="empty-state">No cached participant data. Click "Update Local Cache".</td>
+                                </tr>
+                                {% else %}
                                 {% for participant in participants %}
                                 <tr>
                                     <td>{{ loop.index }}</td>
@@ -288,6 +358,7 @@
                                     </td>
                                 </tr>
                                 {% endfor %}
+                                {% endif %}
                             </tbody>
                         </table>
                     </div>
@@ -302,9 +373,15 @@
                         <i class="fas fa-info-circle me-2"></i> Tournament Details
                     </div>
                     <div class="card-body">
+                        {% if is_client %}
+                        <p><strong>URL:</strong> <a id="tournament-url" href="#" target="_blank">Not loaded</a></p>
+                        <p><strong>Started:</strong> <span id="tournament-started">Not loaded</span></p>
+                        <p><strong>Completed:</strong> <span id="tournament-completed">Not loaded</span></p>
+                        {% else %}
                         <p><strong>URL:</strong> <a href="https://challonge.com/{{ tournament.url }}" target="_blank">{{ tournament.url }}</a></p>
                         <p><strong>Started:</strong> {{ tournament.started_at|default('Not started') }}</p>
                         <p><strong>Completed:</strong> {{ tournament.completed_at|default('In progress') }}</p>
+                        {% endif %}
                         
                         <!-- Custom Content Area -->
                         {% if custom_content %}
@@ -327,26 +404,26 @@
                 <i class="fas fa-gamepad me-2"></i> Matches
             </div>
             <div class="card-body p-0">
+                {% if is_client %}
+                <div id="matches-container" class="matches-container">
+                    <div class="empty-state">No cached match data. Click "Update Local Cache".</div>
+                </div>
+                {% else %}
                 {% if matches %}
                 <div class="matches-container">
                     {% for match in matches %}
                     <div class="match">
                         <div class="players">
-                            <!-- Player 1 -->
                             {% set player1 = get_participant_by_id(match.player1_id) %}
                             <div class="player {{ 'winner' if match.winner_id == match.player1_id }}">
                                 {{ player1.name if player1 else 'Player 1' }}
                             </div>
-                            
                             <div class="vs">VS</div>
-                            
-                            <!-- Player 2 -->
                             {% set player2 = get_participant_by_id(match.player2_id) %}
                             <div class="player {{ 'winner' if match.winner_id == match.player2_id }}">
                                 {{ player2.name if player2 else 'Player 2' }}
                             </div>
                         </div>
-                        
                         <div class="match-info">
                             <span class="state {{ 'state-complete' if match.state == 'complete' else 'state-pending' }}">
                                 {{ match.state|capitalize }}
@@ -363,6 +440,7 @@
                     <p>No matches available.</p>
                 </div>
                 {% endif %}
+                {% endif %}
             </div>
         </div>
         {% endif %}
@@ -371,14 +449,14 @@
             <p>Generated by McChallonge on {{ current_date }}</p>
             <p>
                 {% if show_only == "participants" %}
-                <a href="./index.html">Full Dashboard</a> | 
-                <a href="./matches">View Matches</a>
+                <a href="{{ asset_prefix }}index.html">Full Dashboard</a> | 
+                <a href="{{ asset_prefix }}matches">View Matches</a>
                 {% elif show_only == "matches" %}
-                <a href="./index.html">Full Dashboard</a> | 
-                <a href="./participants">View Participants</a>
+                <a href="{{ asset_prefix }}index.html">Full Dashboard</a> | 
+                <a href="{{ asset_prefix }}participants">View Participants</a>
                 {% else %}
-                <a href="./participants">Participants Only</a> | 
-                <a href="./matches">Matches Only</a>
+                <a href="{{ asset_prefix }}participants">Participants Only</a> | 
+                <a href="{{ asset_prefix }}matches">Matches Only</a>
                 {% endif %}
                 | <a href="https://github.com/AutoMcG/McChallonge" target="_blank">GitHub Repository</a>
             </p>
@@ -386,6 +464,234 @@
     </div>
     
     <!-- Bootstrap JS -->
-    <script src="./static/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ asset_prefix }}static/js/bootstrap.bundle.min.js"></script>
+    {% if is_client %}
+    <script>
+        const showOnly = {{ (show_only or '') | tojson }};
+
+        function getById(id) {
+            return document.getElementById(id);
+        }
+
+        function escapeHtml(value) {
+            const div = document.createElement('div');
+            div.textContent = value ?? '';
+            return div.innerHTML;
+        }
+
+        function setStatusMessage(message, level) {
+            const status = getById('status-message');
+            if (!status) {
+                return;
+            }
+
+            if (!message) {
+                status.style.display = 'none';
+                status.className = 'alert status-message';
+                status.textContent = '';
+                return;
+            }
+
+            status.style.display = 'block';
+            status.className = `alert status-message alert-${level}`;
+            status.textContent = message;
+        }
+
+        function participantMap(participants) {
+            const map = new Map();
+            (participants || []).forEach((participant) => {
+                map.set(participant.id, participant);
+            });
+            return map;
+        }
+
+        function renderTournamentSection(tournament, meta) {
+            const name = getById('tournament-name');
+            const id = getById('tournament-id');
+            const status = getById('tournament-status');
+            const cacheMeta = getById('cache-meta');
+
+            if (name) {
+                if (showOnly === 'participants') {
+                    name.textContent = `${tournament.name || 'Tournament'} - Participants`;
+                } else if (showOnly === 'matches') {
+                    name.textContent = `${tournament.name || 'Tournament'} - Matches`;
+                } else {
+                    name.textContent = tournament.name || 'Tournament Dashboard';
+                }
+            }
+
+            if (id) {
+                id.textContent = `Tournament ID: ${tournament.id ?? 'Unknown'}`;
+            }
+
+            if (status) {
+                const state = (tournament.state || 'unknown').toLowerCase();
+                status.textContent = state.charAt(0).toUpperCase() + state.slice(1);
+                status.classList.remove('status-underway', 'status-completed');
+                status.classList.add(state === 'completed' ? 'status-completed' : 'status-underway');
+            }
+
+            if (cacheMeta) {
+                const cachedAt = meta?.cached_at || 'Unknown';
+                cacheMeta.textContent = `Local cache updated at ${cachedAt}`;
+            }
+
+            const tournamentUrl = getById('tournament-url');
+            if (tournamentUrl) {
+                const slug = tournament.url || '';
+                if (slug) {
+                    tournamentUrl.href = `https://challonge.com/${slug}`;
+                    tournamentUrl.textContent = slug;
+                } else {
+                    tournamentUrl.href = '#';
+                    tournamentUrl.textContent = 'Not available';
+                }
+            }
+
+            const started = getById('tournament-started');
+            if (started) {
+                started.textContent = tournament.started_at || 'Not started';
+            }
+
+            const completed = getById('tournament-completed');
+            if (completed) {
+                completed.textContent = tournament.completed_at || 'In progress';
+            }
+        }
+
+        function renderParticipantsTable(participants) {
+            const body = document.querySelector('.participants-table tbody');
+            if (!body) {
+                return;
+            }
+
+            if (!participants || participants.length === 0) {
+                body.innerHTML = '<tr><td colspan="5" class="empty-state">No participants in local cache.</td></tr>';
+                return;
+            }
+
+            body.innerHTML = participants
+                .map((participant, index) => {
+                    const wins = Number(participant.wins || 0);
+                    const losses = Number(participant.losses || 0);
+                    const total = wins + losses;
+                    const winRate = total > 0 ? `${Math.round((wins / total) * 100)}%` : 'N/A';
+
+                    return `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${escapeHtml(participant.name || 'Unknown')}</td>
+                            <td>${wins}</td>
+                            <td>${losses}</td>
+                            <td>${winRate}</td>
+                        </tr>
+                    `;
+                })
+                .join('');
+        }
+
+        function renderMatches(matches, participants) {
+            const container = getById('matches-container');
+            if (!container) {
+                return;
+            }
+
+            if (!matches || matches.length === 0) {
+                container.innerHTML = '<div class="empty-state">No matches in local cache.</div>';
+                return;
+            }
+
+            const participantsById = participantMap(participants);
+            container.innerHTML = matches
+                .map((match) => {
+                    const player1 = participantsById.get(match.player1_id)?.name || 'Player 1';
+                    const player2 = participantsById.get(match.player2_id)?.name || 'Player 2';
+                    const isPlayer1Winner = match.winner_id && match.winner_id === match.player1_id;
+                    const isPlayer2Winner = match.winner_id && match.winner_id === match.player2_id;
+                    const state = (match.state || 'pending').toLowerCase();
+
+                    return `
+                        <div class="match">
+                            <div class="players">
+                                <div class="player ${isPlayer1Winner ? 'winner' : ''}">${escapeHtml(player1)}</div>
+                                <div class="vs">VS</div>
+                                <div class="player ${isPlayer2Winner ? 'winner' : ''}">${escapeHtml(player2)}</div>
+                            </div>
+                            <div class="match-info">
+                                <span class="state ${state === 'complete' ? 'state-complete' : 'state-pending'}">
+                                    ${escapeHtml(state.charAt(0).toUpperCase() + state.slice(1))}
+                                </span>
+                                ${match.completed_at ? `<span class="date">${escapeHtml(match.completed_at)}</span>` : ''}
+                            </div>
+                        </div>
+                    `;
+                })
+                .join('');
+        }
+
+        function renderDashboard(data) {
+            renderTournamentSection(data.tournament || {}, data.meta || {});
+            renderParticipantsTable(data.participants || []);
+            renderMatches(data.matches || [], data.participants || []);
+        }
+
+        async function loadLocalCache() {
+            try {
+                const response = await fetch('/api/cache', { cache: 'no-store' });
+                if (!response.ok) {
+                    const payload = await response.json();
+                    throw new Error(payload.error || 'Failed to load local cache.');
+                }
+
+                const data = await response.json();
+                renderDashboard(data);
+                setStatusMessage('', 'info');
+            } catch (error) {
+                setStatusMessage(error.message, 'warning');
+            }
+        }
+
+        async function updateLocalCache() {
+            const button = getById('refresh-cache-btn');
+            if (button) {
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Updating...';
+            }
+
+            try {
+                const response = await fetch('/api/cache/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                });
+
+                if (!response.ok) {
+                    const payload = await response.json();
+                    throw new Error(payload.error || 'Failed to update local cache.');
+                }
+
+                const data = await response.json();
+                renderDashboard(data);
+                setStatusMessage('Local cache updated successfully.', 'success');
+            } catch (error) {
+                setStatusMessage(error.message, 'danger');
+            } finally {
+                if (button) {
+                    button.disabled = false;
+                    button.innerHTML = '<i class="fas fa-sync-alt me-1"></i> Update Local Cache';
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const refreshButton = getById('refresh-cache-btn');
+            if (refreshButton) {
+                refreshButton.addEventListener('click', updateLocalCache);
+            }
+
+            loadLocalCache();
+        });
+    </script>
+    {% endif %}
 </body>
 </html>

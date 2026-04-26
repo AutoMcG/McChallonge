@@ -2,11 +2,11 @@ import os
 import logging
 import time
 import sys
-from flask import Flask, render_template, url_for
+from flask import Flask, render_template, jsonify, redirect, url_for
 from flask_frozen import Freezer
 
 from mcchallonge import config
-from mcchallonge.services import challonging, think, templating
+from mcchallonge.services.local_cache import load_cached_tournament_data, refresh_cached_tournament_data
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -34,81 +34,69 @@ app.config['FREEZER_RELATIVE_URLS'] = True  # Use relative URLs for links
 freezer = Freezer(app, with_static_files=True, with_no_argument_rules=True)
 
 @app.route('/')
+def root_page():
+    """Redirect root to /index.html for live server parity with static output."""
+    return redirect(url_for('tournament_page'))
+
+@app.route('/index.html')
 def tournament_page():
-    """Render the main tournament page"""
-    # Create API session
-    session = challonging.prepare_session_from_env()
-    
-    # Get tournament data
-    tournament_id = app.config['TOURNAMENT_ID']
-    tournament = challonging.get_tournament_data(session, tournament_id)
-    participants = challonging.get_participants_data(session, tournament_id)
-    matches = challonging.get_match_data(session, tournament_id)
-    
-    # Process data
-    updated_participants = think.count_outcomes(matches, participants)
-    
-    # Render template
+    """Render the main tournament page shell. Data is loaded client-side from local cache."""
     return render_template(
         'tournament_dashboard.jinja.html',
-        title=f"Tournament: {tournament.name}",
-        tournament=tournament,
-        participants=updated_participants,
-        matches=matches,
+        title="Tournament Dashboard",
         current_date=time.strftime("%Y-%m-%d %H:%M"),
-        get_participant_by_id=lambda pid: next((p for p in updated_participants if p.id == pid), None)
+        client_rendered=True
     )
 
 @app.route('/participants')
 def participants_page():
-    """Render just the participants list"""
-    session = challonging.prepare_session_from_env()
-    tournament_id = app.config['TOURNAMENT_ID']
-    tournament = challonging.get_tournament_data(session, tournament_id)
-    participants = challonging.get_participants_data(session, tournament_id)
-    matches = []  # Empty matches list for this view
-    
-    # Process data
-    updated_participants = think.count_outcomes([], participants)  # No matches to count
-    
+    """Render just the participants list shell. Data is loaded client-side from local cache."""
     return render_template(
         'tournament_dashboard.jinja.html',
         title="Participants",
-        tournament=tournament,
-        participants=updated_participants,
-        matches=matches,
         current_date=time.strftime("%Y-%m-%d %H:%M"),
-        get_participant_by_id=lambda pid: next((p for p in updated_participants if p.id == pid), None),
+        client_rendered=True,
         show_only="participants"  # Signal to template to only show participants section
     )
 
 @app.route('/matches')
 def matches_page():
-    """Render the matches list"""
-    session = challonging.prepare_session_from_env()
-    tournament_id = app.config['TOURNAMENT_ID']
-    tournament = challonging.get_tournament_data(session, tournament_id)
-    participants = challonging.get_participants_data(session, tournament_id)
-    matches = challonging.get_match_data(session, tournament_id)
-    
-    # Process data
-    updated_participants = think.count_outcomes(matches, participants)
-    
+    """Render the matches list shell. Data is loaded client-side from local cache."""
     return render_template(
         'tournament_dashboard.jinja.html',
         title="Matches",
-        tournament=tournament,
-        participants=updated_participants,
-        matches=matches,
         current_date=time.strftime("%Y-%m-%d %H:%M"),
-        get_participant_by_id=lambda pid: next((p for p in updated_participants if p.id == pid), None),
+        client_rendered=True,
         show_only="matches"  # Signal to template to only show matches section
     )
+
+@app.route('/api/cache', methods=['GET'])
+def cache_data():
+    """Return locally cached tournament data."""
+    data = load_cached_tournament_data()
+    if data is None:
+        return jsonify({"error": "Local cache file not found. Click 'Update Local Cache' to create it."}), 404
+    return jsonify(data)
+
+@app.route('/api/cache/update', methods=['POST'])
+def cache_data_update():
+    """Fetch latest data from Challonge and update local cache file."""
+    tournament_id = app.config['TOURNAMENT_ID']
+    if not tournament_id:
+        return jsonify({"error": "Tournament ID is not configured."}), 500
+
+    try:
+        data = refresh_cached_tournament_data(tournament_id)
+        return jsonify(data)
+    except Exception as exc:
+        logger.exception("Failed to refresh local cache data")
+        return jsonify({"error": f"Failed to update local cache: {exc}"}), 500
 
 @freezer.register_generator
 def url_generator():
     # Generate URLs for freezer
     yield '/'
+    yield '/index.html'
     yield '/participants'
     yield '/matches'
     

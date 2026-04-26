@@ -2,6 +2,15 @@ import os
 import shutil
 from mcchallonge.services.templating import render_tournament_dashboard
 
+
+def _write_dashboard_file(output_file, html_content):
+    output_dir = os.path.dirname(output_file)
+    if output_dir:
+        os.makedirs(output_dir, exist_ok=True)
+
+    with open(output_file, 'w', encoding='utf-8') as f:
+        f.write(html_content)
+
 # Example usage of the templating module in a standalone script
 def generate_static_tournament_page(tournament, participants, matches, output_file, 
                                     custom_content=None, logo_url=None):
@@ -17,17 +26,43 @@ def generate_static_tournament_page(tournament, participants, matches, output_fi
         logo_url: Optional URL for tournament logo
     """
     html_content = render_tournament_dashboard(
-        tournament, participants, matches, custom_content, logo_url
+        tournament,
+        participants,
+        matches,
+        custom_content,
+        logo_url,
+        path_prefix="./",
     )
-    
-    # Create output directory if it doesn't exist
+
     output_dir = os.path.dirname(output_file)
-    if output_dir:  # Only try to create if there's a directory part
+    if output_dir:
         os.makedirs(output_dir, exist_ok=True)
-    
-    # Write HTML content
-    with open(output_file, 'w', encoding='utf-8') as f:
-        f.write(html_content)
+
+    _write_dashboard_file(output_file, html_content)
+
+    participants_output_file = os.path.join(output_dir, 'participants') if output_dir else 'participants'
+    participants_html = render_tournament_dashboard(
+        tournament,
+        participants,
+        matches,
+        custom_content,
+        logo_url,
+        show_only='participants',
+        path_prefix='./',
+    )
+    _write_dashboard_file(participants_output_file, participants_html)
+
+    matches_output_file = os.path.join(output_dir, 'matches') if output_dir else 'matches'
+    matches_html = render_tournament_dashboard(
+        tournament,
+        participants,
+        matches,
+        custom_content,
+        logo_url,
+        show_only='matches',
+        path_prefix='./',
+    )
+    _write_dashboard_file(matches_output_file, matches_html)
     
     # Copy static files
     package_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -54,4 +89,6 @@ def generate_static_tournament_page(tournament, participants, matches, output_fi
                     shutil.copy2(src_file, dest_file)
     
     print(f"Tournament page generated: {output_file}")
+    print(f"Participants page generated: {participants_output_file}")
+    print(f"Matches page generated: {matches_output_file}")
     print(f"Static files copied to: {static_dest_dir}")

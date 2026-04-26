@@ -6,6 +6,7 @@ import json
 import tempfile
 import subprocess
 import pytest
+from unittest.mock import patch
 
 from ..models.tournament import Tournament
 from ..models.participant import Participant
@@ -99,6 +100,8 @@ def test_cli_generate_dashboard():
         # Create test JSON files
         tournament_file, participants_file, matches_file = create_test_files(temp_dir)
         output_file = os.path.join(temp_dir, "test_dashboard.html")
+        participants_page = os.path.join(temp_dir, "participants")
+        matches_page = os.path.join(temp_dir, "matches")
         
         # Run the CLI tool using subprocess to capture return code
         cmd = [
@@ -117,6 +120,8 @@ def test_cli_generate_dashboard():
         
         # Check if the output file was created
         assert os.path.exists(output_file), "Output HTML file was not created"
+        assert os.path.exists(participants_page), "Participants page was not created"
+        assert os.path.exists(matches_page), "Matches page was not created"
         
         # Check file contents for expected elements
         with open(output_file, 'r', encoding='utf-8') as f:
@@ -127,6 +132,18 @@ def test_cli_generate_dashboard():
             assert "Player 2" in content, "Player 2 not found in output"
             assert "Player 3" in content, "Player 3 not found in output"
 
+        with open(participants_page, 'r', encoding='utf-8') as f:
+            participants_content = f.read()
+            assert "Test Tournament - Participants" in participants_content
+            assert "./static/css/bootstrap.min.css" in participants_content
+            assert "href=\"./matches\"" in participants_content
+
+        with open(matches_page, 'r', encoding='utf-8') as f:
+            matches_content = f.read()
+            assert "Test Tournament - Matches" in matches_content
+            assert "./static/js/bootstrap.bundle.min.js" in matches_content
+            assert "href=\"./participants\"" in matches_content
+
 def test_static_generator_direct():
     """Test the static generator function directly without CLI"""
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -136,12 +153,16 @@ def test_static_generator_direct():
         matches = [Match(**m) for m in SAMPLE_MATCHES]
         
         output_file = os.path.join(temp_dir, "direct_dashboard.html")
+        participants_page = os.path.join(temp_dir, "participants")
+        matches_page = os.path.join(temp_dir, "matches")
         
         # Call the function directly
         generate_static_tournament_page(tournament, participants, matches, output_file)
         
         # Verify the output was created
         assert os.path.exists(output_file), "Output HTML file was not created"
+        assert os.path.exists(participants_page), "Participants page was not created"
+        assert os.path.exists(matches_page), "Matches page was not created"
         
         # Check content
         with open(output_file, 'r', encoding='utf-8') as f:
@@ -150,6 +171,56 @@ def test_static_generator_direct():
             assert "Player 1" in content
             assert "Player 2" in content
             assert "Player 3" in content
+
+
+@patch("mcchallonge.cli.generate_dashboard.get_match_data")
+@patch("mcchallonge.cli.generate_dashboard.get_participants_data")
+@patch("mcchallonge.cli.generate_dashboard.get_tournament_data")
+@patch("mcchallonge.cli.generate_dashboard.prepare_session_from_env")
+def test_cli_generate_dashboard_writes_json_artifacts(
+    mock_prepare_session,
+    mock_get_tournament_data,
+    mock_get_participants_data,
+    mock_get_match_data,
+):
+    """Test that live-mode CLI generation writes JSON artifacts next to the dashboard."""
+    mock_prepare_session.return_value = object()
+    mock_get_tournament_data.return_value = Tournament(**SAMPLE_TOURNAMENT)
+    mock_get_participants_data.return_value = [Participant(**participant) for participant in SAMPLE_PARTICIPANTS]
+    mock_get_match_data.return_value = [Match(**match) for match in SAMPLE_MATCHES]
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        output_file = os.path.join(temp_dir, "generated_dashboard.html")
+
+        with patch("sys.argv", [
+            "generate_dashboard",
+            "test_tournament",
+            "-o",
+            output_file,
+        ]):
+            from ..cli.generate_dashboard import main
+
+            main()
+
+        tournament_json = os.path.join(temp_dir, "tournament.json")
+        participants_json = os.path.join(temp_dir, "participants.json")
+        matches_json = os.path.join(temp_dir, "matches.json")
+
+        assert os.path.exists(output_file), "Output HTML file was not created"
+        assert os.path.exists(tournament_json), "Tournament JSON file was not created"
+        assert os.path.exists(participants_json), "Participants JSON file was not created"
+        assert os.path.exists(matches_json), "Matches JSON file was not created"
+
+        with open(tournament_json, 'r', encoding='utf-8') as handle:
+            assert json.load(handle)["name"] == "Test Tournament"
+
+        with open(participants_json, 'r', encoding='utf-8') as handle:
+            participants = json.load(handle)
+            assert [participant["name"] for participant in participants] == ["Player 1", "Player 2", "Player 3"]
+
+        with open(matches_json, 'r', encoding='utf-8') as handle:
+            matches = json.load(handle)
+            assert [match["id"] for match in matches] == [201, 202, 203]
 
 if __name__ == "__main__":
     # Allow running this test directly for debugging

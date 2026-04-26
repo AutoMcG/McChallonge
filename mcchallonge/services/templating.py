@@ -3,7 +3,15 @@ from datetime import datetime
 from flask import render_template, current_app
 from jinja2 import Environment, FileSystemLoader, BaseLoader
 
-def render_tournament_dashboard(tournament, participants, matches, custom_content=None, logo_url=None):
+def render_tournament_dashboard(
+    tournament,
+    participants,
+    matches,
+    custom_content=None,
+    logo_url=None,
+    show_only=None,
+    path_prefix="./",
+):
     """
     Renders the tournament dashboard template with provided data.
     Works both within Flask app context and in standalone CLI mode.
@@ -14,6 +22,8 @@ def render_tournament_dashboard(tournament, participants, matches, custom_conten
         matches: List of Match objects
         custom_content: Optional HTML content to add to the dashboard
         logo_url: Optional URL for tournament logo image
+        show_only: Optional section-specific render mode
+        path_prefix: Relative prefix used for static assets and internal links
         
     Returns:
         String with rendered HTML content
@@ -43,7 +53,9 @@ def render_tournament_dashboard(tournament, participants, matches, custom_conten
         'custom_content': custom_content,
         'logo_url': logo_url,
         'current_date': current_date,
-        'get_participant_by_id': get_participant_by_id
+        'get_participant_by_id': get_participant_by_id,
+        'show_only': show_only,
+        'path_prefix': path_prefix,
     }
     
     try:

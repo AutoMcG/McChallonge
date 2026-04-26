@@ -58,6 +58,16 @@ CHALLONGE_REDIRECT_URI
 python -m mcchallonge.app
 ```
 
+The dashboard now loads tournament data from a local JSON cache file (default: `build/tournament_cache.json`).
+It does not fetch Challonge data automatically on page load.
+Use the **Update Local Cache** button in the UI to refresh local cached data.
+
+Optional cache file override:
+
+```text
+MCCHALLONGE_CACHE_FILE
+```
+
 Then open:
 - http://127.0.0.1:5000/
 - http://127.0.0.1:5000/participants
@@ -75,6 +85,21 @@ Static output is generated in the `build` directory.
 
 ```bash
 python -m mcchallonge.cli.generate_dashboard <tournament_id_or_url> -o build/index.html
+```
+
+When run against the live API, this command now also writes these normalized JSON files next to the HTML output:
+
+```text
+tournament.json
+participants.json
+matches.json
+```
+
+It also generates section pages in the same output tree:
+
+```text
+participants
+matches
 ```
 
 Offline mode with local JSON files:
