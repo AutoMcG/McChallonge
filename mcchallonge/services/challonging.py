@@ -75,7 +75,11 @@ def get_participants_data(session: requests.Session, tournament_id_or_url: str) 
     logger.info(f"Retrieved {len(pilots)} participants")
     return pilots
 
-def get_match_data(session: requests.Session, tournament_id_or_url: str) -> list[Match]:
+def get_match_data(
+    session: requests.Session,
+    tournament_id_or_url: str,
+    states: str | list[str] | None = None,
+) -> list[Match]:
     URL = f'{CHALLONGE_API_V1}/tournaments/{tournament_id_or_url}/matches.json'
     
     response = session.get(URL)
@@ -84,4 +88,10 @@ def get_match_data(session: requests.Session, tournament_id_or_url: str) -> list
     
     matches = [Match(**value["match"]) for value in response_data]
     logger.info(f"Retrieved {len(matches)} matches")
+
+    if states is not None:
+        filter_states = {states} if isinstance(states, str) else set(states)
+        matches = [match for match in matches if match.state in filter_states]
+        logger.info(f"Filtered to {len(matches)} matches with state(s): {filter_states}")
+
     return matches

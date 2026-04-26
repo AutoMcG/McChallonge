@@ -167,7 +167,7 @@ def test_static_generator_direct():
         # Check content
         with open(output_file, 'r', encoding='utf-8') as f:
             content = f.read()
-            assert "<title>Tournament: Test Tournament</title>" in content
+            assert "<title>Test Tournament</title>" in content
             assert "Player 1" in content
             assert "Player 2" in content
             assert "Player 3" in content

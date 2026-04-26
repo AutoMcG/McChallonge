@@ -46,8 +46,9 @@ def render_tournament_dashboard(
 
     # Prepare template data
     template_data = {
-        'title': f"Tournament: {tournament.name}",
+        'title': tournament.name if tournament else "Tournament Dashboard",
         'tournament': tournament,
+        'tournaments': [tournament] if tournament else [],
         'participants': sorted_participants,
         'matches': matches,
         'custom_content': custom_content,

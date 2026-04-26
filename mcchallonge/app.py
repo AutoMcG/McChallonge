@@ -2,11 +2,11 @@ import os
 import logging
 import time
 import sys
-from flask import Flask, render_template, jsonify, redirect, url_for
+from flask import Flask, render_template, jsonify, request, redirect, url_for
 from flask_frozen import Freezer
 
 from mcchallonge import config
-from mcchallonge.services.local_cache import load_cached_tournament_data, refresh_cached_tournament_data
+from mcchallonge.services.local_cache import load_cached_tournament_data, refresh_all_cached_tournaments
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -29,7 +29,7 @@ app = Flask(__name__,
 
 # Configuration
 app.config.from_object('mcchallonge.config')
-app.config['TOURNAMENT_ID'] = config.CHALLONGE_TOURNAMENT_ID
+app.config['TOURNAMENT_IDS'] = config.CHALLONGE_TOURNAMENT_IDS
 app.config['FREEZER_RELATIVE_URLS'] = True  # Use relative URLs for links
 freezer = Freezer(app, with_static_files=True, with_no_argument_rules=True)
 
@@ -81,16 +81,32 @@ def cache_data():
 @app.route('/api/cache/update', methods=['POST'])
 def cache_data_update():
     """Fetch latest data from Challonge and update local cache file."""
-    tournament_id = app.config['TOURNAMENT_ID']
-    if not tournament_id:
-        return jsonify({"error": "Tournament ID is not configured."}), 500
+    body = request.get_json(silent=True) or {}
+    requested_id = body.get('tournament_id')
+
+    if requested_id:
+        tournament_ids = [requested_id]
+    else:
+        tournament_ids = app.config['TOURNAMENT_IDS']
+
+    if not tournament_ids:
+        return jsonify({"error": "No tournament IDs are configured."}), 500
 
     try:
-        data = refresh_cached_tournament_data(tournament_id)
+        data = refresh_all_cached_tournaments(tournament_ids)
         return jsonify(data)
     except Exception as exc:
         logger.exception("Failed to refresh local cache data")
         return jsonify({"error": f"Failed to update local cache: {exc}"}), 500
+
+@app.route('/api/cache/clear', methods=['POST'])
+def cache_data_clear():
+    """Delete the local cache file."""
+    from mcchallonge.services.local_cache import get_cache_file_path
+    cache_path = get_cache_file_path()
+    if cache_path.exists():
+        cache_path.unlink()
+    return jsonify({"message": "Cache cleared."})
 
 @freezer.register_generator
 def url_generator():

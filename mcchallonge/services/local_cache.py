@@ -16,6 +16,14 @@ def get_cache_file_path() -> Path:
     return Path(configured_path).expanduser().resolve()
 
 
+def _migrate_legacy(data: dict[str, Any]) -> dict[str, Any]:
+    """Upgrade a legacy single-tournament cache payload to the multi-tournament format."""
+    if "tournament" in data and "tournaments" not in data:
+        tournament_id = str(data.get("meta", {}).get("tournament_id", "unknown"))
+        return {"tournaments": {tournament_id: data}}
+    return data
+
+
 def load_cached_tournament_data() -> dict[str, Any] | None:
     """Load cached tournament data from disk, if it exists."""
     cache_path = get_cache_file_path()
@@ -23,11 +31,13 @@ def load_cached_tournament_data() -> dict[str, Any] | None:
         return None
 
     with cache_path.open("r", encoding="utf-8") as cache_file:
-        return json.load(cache_file)
+        data = json.load(cache_file)
+
+    return _migrate_legacy(data)
 
 
 def refresh_cached_tournament_data(tournament_id: str) -> dict[str, Any]:
-    """Fetch latest data from Challonge and persist a local JSON cache."""
+    """Fetch latest data for one tournament and update the shared cache file."""
     session = challonging.prepare_session_from_env()
 
     tournament = challonging.get_tournament_data(session, tournament_id)
@@ -35,10 +45,10 @@ def refresh_cached_tournament_data(tournament_id: str) -> dict[str, Any]:
     matches = challonging.get_match_data(session, tournament_id)
     updated_participants = think.count_outcomes(matches, participants)
 
-    payload = {
+    entry: dict[str, Any] = {
         "tournament": tournament.__dict__,
-        "participants": [participant.__dict__ for participant in updated_participants],
-        "matches": [match.__dict__ for match in matches],
+        "participants": [p.__dict__ for p in updated_participants],
+        "matches": [m.__dict__ for m in matches],
         "meta": {
             "cached_at": time.strftime("%Y-%m-%d %H:%M"),
             "tournament_id": tournament_id,
@@ -46,11 +56,31 @@ def refresh_cached_tournament_data(tournament_id: str) -> dict[str, Any]:
         },
     }
 
+    # Load existing cache and merge (preserving other tournaments).
     cache_path = get_cache_file_path()
+    existing: dict[str, Any] = {}
+    if cache_path.exists():
+        with cache_path.open("r", encoding="utf-8") as cache_file:
+            existing = json.load(cache_file)
+        existing = _migrate_legacy(existing)
+
+    if "tournaments" not in existing:
+        existing["tournaments"] = {}
+
+    existing["tournaments"][str(tournament_id)] = entry
+
     cache_path.parent.mkdir(parents=True, exist_ok=True)
-
     with cache_path.open("w", encoding="utf-8") as cache_file:
-        json.dump(payload, cache_file, indent=2)
+        json.dump(existing, cache_file, indent=2)
 
-    logger.info("Local cache updated at %s", cache_path)
-    return payload
+    logger.info("Cache updated for tournament %s at %s", tournament_id, cache_path)
+    return existing
+
+
+def refresh_all_cached_tournaments(tournament_ids: list[str]) -> dict[str, Any]:
+    """Refresh cache for all given tournament IDs and return the full cache."""
+    result: dict[str, Any] = {}
+    for tournament_id in tournament_ids:
+        result = refresh_cached_tournament_data(tournament_id)
+    return result
+
