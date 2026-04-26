@@ -15,3 +15,9 @@ CHALLONGE_TOURNAMENT_ID: str | None = CHALLONGE_TOURNAMENT_IDS[0] if CHALLONGE_T
 
 # Output settings
 BUILD_DIR = os.environ.get('BUILD_DIR', 'build')
+
+# Optional logo for dashboard header. Supports absolute URL or path under static/.
+# Examples:
+# - MCCHALLONGE_LOGO_URL=https://example.com/logo.png
+# - MCCHALLONGE_LOGO_URL=img/logo.png
+MCCHALLONGE_LOGO_URL = os.environ.get('MCCHALLONGE_LOGO_URL')

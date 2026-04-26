@@ -33,6 +33,19 @@ app.config['TOURNAMENT_IDS'] = config.CHALLONGE_TOURNAMENT_IDS
 app.config['FREEZER_RELATIVE_URLS'] = True  # Use relative URLs for links
 freezer = Freezer(app, with_static_files=True, with_no_argument_rules=True)
 
+
+def _resolve_logo_url() -> str | None:
+    configured_logo = config.MCCHALLONGE_LOGO_URL
+    if not configured_logo:
+        return None
+
+    # Absolute URLs can be used directly.
+    if configured_logo.startswith(('http://', 'https://', '/')):
+        return configured_logo
+
+    # Relative paths are treated as files under Flask static/.
+    return url_for('static', filename=configured_logo)
+
 @app.route('/')
 def root_page():
     """Redirect root to /index.html for live server parity with static output."""
@@ -45,7 +58,8 @@ def tournament_page():
         'tournament_dashboard.jinja.html',
         title="Tournament Dashboard",
         current_date=time.strftime("%Y-%m-%d %H:%M"),
-        client_rendered=True
+        client_rendered=True,
+        logo_url=_resolve_logo_url(),
     )
 
 @app.route('/participants')
@@ -56,7 +70,8 @@ def participants_page():
         title="Participants",
         current_date=time.strftime("%Y-%m-%d %H:%M"),
         client_rendered=True,
-        show_only="participants"  # Signal to template to only show participants section
+        show_only="participants",  # Signal to template to only show participants section
+        logo_url=_resolve_logo_url(),
     )
 
 @app.route('/matches')
@@ -67,7 +82,8 @@ def matches_page():
         title="Matches",
         current_date=time.strftime("%Y-%m-%d %H:%M"),
         client_rendered=True,
-        show_only="matches"  # Signal to template to only show matches section
+        show_only="matches",  # Signal to template to only show matches section
+        logo_url=_resolve_logo_url(),
     )
 
 @app.route('/api/cache', methods=['GET'])
