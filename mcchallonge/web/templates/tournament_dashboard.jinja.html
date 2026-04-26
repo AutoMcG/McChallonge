@@ -396,9 +396,6 @@
                 {% if is_client %}
                 <div class="d-flex flex-wrap gap-3 align-items-center">
                     <div id="match-state-filters" class="d-flex flex-wrap gap-2 align-items-center"></div>
-                    {% if show_only == 'matches' %}
-                    <div id="tournament-filters" class="d-flex flex-wrap gap-2 align-items-center"></div>
-                    {% endif %}
                 </div>
                 {% endif %}
             </div>
@@ -458,9 +455,6 @@
                         <div class="d-flex flex-wrap gap-2 align-items-center">
                             <input id="participant-name-filter" type="search" class="form-control form-control-sm filter-input"
                                    placeholder="Filter by name..." autocomplete="off">
-                            {% if show_only == 'participants' %}
-                            <div id="tournament-filters" class="d-flex flex-wrap gap-2 align-items-center"></div>
-                            {% endif %}
                         </div>
                         {% endif %}
                     </div>
