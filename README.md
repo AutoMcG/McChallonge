@@ -32,7 +32,7 @@ Environment variables are loaded from `.env` (via `python-dotenv`).
 Copy and fill in the sample file:
 
 ```bash
-cp mcchallonge/sample-env .env
+cp mcchallonge/.env.example .env
 ```
 
 Required for API access:
