@@ -1,1 +1,1 @@
-__all__ = ["challonging", "think", "templater", "oauth_client"]
+__all__ = ["challonging", "think", "templating", "oauth_client"]
