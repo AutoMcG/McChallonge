@@ -58,7 +58,6 @@ class UnitTestChallonging:
         assert tournaments[0].name == "Test Tournament"
         mock_session.prepare_request.assert_called_once()
 
-    @patch('requests.Session.get')
     def test_get_tournament_data(self, mock_session):
         """Test getting single tournament data"""
         # Set up mock response
