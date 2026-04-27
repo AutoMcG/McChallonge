@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% set asset_prefix = path_prefix|default('./') %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="{{ asset_prefix }}static/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="{{ asset_prefix }}static/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #2c3e50;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: var(--dark-color);
+            padding: 20px;
+        }
+        
+        .tournament-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 30px;
+            border-radius: 15px 15px 0 0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+        
+        .tournament-header h1 {
+            margin: 0;
+            font-weight: 700;
+            font-size: 2.5rem;
+        }
+        
+        .tournament-header p {
+            margin: 10px 0 0;
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .tournament-header .status {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .status-underway {
+            background-color: var(--accent-color);
+            color: white;
+        }
+        
+        .status-completed {
+            background-color: #27ae60;
+            color: white;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s;
+            margin-bottom: 30px;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-header {
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 15px 20px;
+            font-weight: 600;
+        }
+        
+        .table {
+            margin-bottom: 0;
+        }
+        
+        .table th {
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            font-weight: 600;
+            border-top: none;
+        }
+        
+        .participants-table tbody tr:hover {
+            background-color: rgba(52, 152, 219, 0.05);
+        }
+        
+        .match {
+            display: flex;
+            padding: 15px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .match:last-child {
+            border-bottom: none;
+        }
+        
+        .match .players {
+            display: flex;
+            flex: 1;
+        }
+        
+        .match .player {
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-right: 15px;
+            flex: 1;
+            background-color: var(--light-color);
+        }
+        
+        .match .player.winner {
+            background-color: rgba(39, 174, 96, 0.2);
+            border-left: 4px solid #27ae60;
+            font-weight: 600;
+        }
+        
+        .match .vs {
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            color: var(--secondary-color);
+            font-weight: 700;
+        }
+        
+        .match .match-info {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-width: 150px;
+            text-align: center;
+        }
+        
+        .match .state {
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+        
+        .match .state-complete {
+            background-color: #27ae60;
+            color: white;
+        }
+        
+        .match .state-pending {
+            background-color: #f39c12;
+            color: white;
+        }
+        
+        .match .round {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+            display: inline-block;
+        }
+        
+        .match .date {
+            margin-top: 5px;
+            font-size: 0.85rem;
+            color: #7f8c8d;
+        }
+        
+        .logo-container {
+            position: absolute;
+            right: 20px;
+            bottom: 20px;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .logo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            padding: 20px 0;
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .cache-meta {
+            opacity: 0.95;
+            font-size: 0.95rem;
+            margin: 0;
+        }
+
+        .status-message {
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .empty-state {
+            color: #7f8c8d;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .filter-input {
+            max-width: 200px;
+            background-color: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+
+        .filter-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .filter-input:focus {
+            background-color: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.5);
+            color: white;
+            box-shadow: none;
+        }
+
+        #match-state-filters .form-check-label,
+        #tournament-filters .form-check-label {
+            color: white;
+            font-size: 0.85rem;
+            font-weight: normal;
+        }
+
+        #match-state-filters .form-check-input,
+        #tournament-filters .form-check-input {
+            cursor: pointer;
+        }
+
+        .tournament-col {
+            display: none;
+        }
+
+        .multi-tournament .tournament-col {
+            display: table-cell;
+        }
+
+        .tournament-badge {
+            margin-top: 4px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            background-color: rgba(52, 152, 219, 0.15);
+            color: var(--secondary-color);
+            display: inline-block;
+        }
+        
+        @media (max-width: 767px) {
+            .match {
+                flex-direction: column;
+            }
+            
+            .match .match-info {
+                margin-top: 15px;
+            }
+            
+            .tournament-header {
+                padding: 20px;
+            }
+            
+            .tournament-header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .logo-container {
+                width: 80px;
+                height: 80px;
+                bottom: 10px;
+                right: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    {% set is_client = client_rendered|default(false) %}
+    <div class="container">
+        {% if is_client %}
+        <div id="status-message" class="alert status-message" role="alert"></div>
+        {% endif %}
+
+        <!-- Tournament Header -->
+        {% if not show_only or show_only == "tournament" %}
+        <div class="tournament-header">
+            {% if is_client %}
+            <h1 id="tournament-name">Tournament Dashboard</h1>
+            <p id="tournament-id">Tournament ID: Not loaded</p>
+            <div id="tournament-status" class="status status-underway">Unknown</div>
+            <div class="controls">
+                <button id="refresh-cache-btn" class="btn btn-light btn-sm" type="button">
+                    <i class="fas fa-sync-alt me-1"></i> Update Local Cache
+                </button>
+                <button id="clear-cache-btn" class="btn btn-outline-light btn-sm" type="button">
+                    <i class="fas fa-trash-alt me-1"></i> Clear Cache
+                </button>
+                <p id="cache-meta" class="cache-meta">Local cache has not been loaded yet.</p>
+                <div id="tournament-filters" class="d-flex flex-wrap gap-2 align-items-center mt-1 w-100"></div>
+            </div>
+            {% else %}
+            <h1 id="tournament-name">{{ tournament.name if tournament else 'Tournament Dashboard' }}</h1>
+            <p id="tournament-id">Tournament ID: {{ tournament.id if tournament else '' }}</p>
+            <div id="tournament-status" class="status {{ 'status-completed' if tournament and tournament.state == 'completed' else 'status-underway' }}">
+                {{ tournament.state|capitalize if tournament else '' }}
+            </div>
+            {% endif %}
+            
+            <!-- Tournament Logo/Image - You can customize this -->
+            <div class="logo-container">
+                <img src="{{ logo_url|default('https://via.placeholder.com/150x150.png?text=Tournament') }}" alt="Tournament Logo">
+            </div>
+        </div>
+        {% elif show_only == "participants" %}
+        <div class="tournament-header">
+            {% if is_client %}
+            <h1 id="tournament-name">Participants</h1>
+            <p id="tournament-id">Tournament ID: Not loaded</p>
+            <div class="controls">
+                <button id="refresh-cache-btn" class="btn btn-light btn-sm" type="button">
+                    <i class="fas fa-sync-alt me-1"></i> Update Local Cache
+                </button>
+                <button id="clear-cache-btn" class="btn btn-outline-light btn-sm" type="button">
+                    <i class="fas fa-trash-alt me-1"></i> Clear Cache
+                </button>
+                <p id="cache-meta" class="cache-meta">Local cache has not been loaded yet.</p>
+                <div id="tournament-filters" class="d-flex flex-wrap gap-2 align-items-center mt-1 w-100"></div>
+            </div>
+            {% else %}
+            <h1 id="tournament-name">{{ tournament.name }} - Participants</h1>
+            <p id="tournament-id">Tournament ID: {{ tournament.id }}</p>
+            {% endif %}
+        </div>
+        {% elif show_only == "matches" %}
+        <div class="tournament-header">
+            {% if is_client %}
+            <h1 id="tournament-name">Matches</h1>
+            <p id="tournament-id">Tournament ID: Not loaded</p>
+            <div class="controls">
+                <button id="refresh-cache-btn" class="btn btn-light btn-sm" type="button">
+                    <i class="fas fa-sync-alt me-1"></i> Update Local Cache
+                </button>
+                <button id="clear-cache-btn" class="btn btn-outline-light btn-sm" type="button">
+                    <i class="fas fa-trash-alt me-1"></i> Clear Cache
+                </button>
+                <p id="cache-meta" class="cache-meta">Local cache has not been loaded yet.</p>
+                <div id="tournament-filters" class="d-flex flex-wrap gap-2 align-items-center mt-1 w-100"></div>
+            </div>
+            {% else %}
+            <h1 id="tournament-name">{{ tournament.name }} - Matches</h1>
+            <p id="tournament-id">Tournament ID: {{ tournament.id }}</p>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <!-- Matches Section -->
+        {% if not show_only or show_only == "matches" %}
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <span><i class="fas fa-gamepad me-2"></i> Matches</span>
+                {% if is_client %}
+                <div class="d-flex flex-wrap gap-3 align-items-center">
+                    <div id="match-state-filters" class="d-flex flex-wrap gap-2 align-items-center"></div>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-body p-0">
+                {% if is_client %}
+                <div id="matches-container" class="matches-container">
+                    <div class="empty-state">No cached match data. Click "Update Local Cache".</div>
+                </div>
+                {% else %}
+                {% if matches %}
+                <div class="matches-container">
+                    {% for match in matches %}
+                    <div class="match">
+                        <div class="players">
+                            {% set player1 = get_participant_by_id(match.player1_id) %}
+                            <div class="player {{ 'winner' if match.winner_id == match.player1_id }}">
+                                {{ player1.name if player1 else 'Player 1' }}
+                            </div>
+                            <div class="vs">VS</div>
+                            {% set player2 = get_participant_by_id(match.player2_id) %}
+                            <div class="player {{ 'winner' if match.winner_id == match.player2_id }}">
+                                {{ player2.name if player2 else 'Player 2' }}
+                            </div>
+                        </div>
+                        <div class="match-info">
+                            {% if match.round is not none %}
+                            <span class="round">Round {{ match.round }}</span>
+                            {% endif %}
+                            <span class="state {{ 'state-complete' if match.state == 'complete' else 'state-pending' }}">
+                                {{ match.state|capitalize }}
+                            </span>
+                            {% if match.completed_at %}
+                            <span class="date">{{ match.completed_at }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <p>No matches available.</p>
+                </div>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if not show_only or show_only == "participants" %}
+        <div class="row">
+            <!-- Participants Table -->
+            <div class="col-lg-{% if show_only == "participants" %}12{% else %}8{% endif %} col-md-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <span><i class="fas fa-users me-2"></i> Participants</span>
+                        {% if is_client %}
+                        <div class="d-flex flex-wrap gap-2 align-items-center">
+                            <input id="participant-name-filter" type="search" class="form-control form-control-sm filter-input"
+                                   placeholder="Filter by name..." autocomplete="off">
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table participants-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Name</th>
+                                    {% if is_client %}<th class="tournament-col">Tournament</th>{% endif %}
+                                    <th>Wins</th>
+                                    <th>Losses</th>
+                                    <th>Win Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if is_client %}
+                                <tr>
+                                    <td colspan="6" class="empty-state">No cached participant data. Click "Update Local Cache".</td>
+                                </tr>
+                                {% else %}
+                                {% for participant in participants %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>{{ participant.name }}</td>
+                                    <td>{{ participant.wins }}</td>
+                                    <td>{{ participant.losses }}</td>
+                                    <td>
+                                        {% if participant.wins + participant.losses > 0 %}
+                                            {{ "%.0f"|format(participant.wins / (participant.wins + participant.losses) * 100) }}%
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Event Details -->
+            {% if not show_only %}
+            <div class="col-lg-4 col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-info-circle me-2"></i> Event Details
+                    </div>
+                    <div class="card-body" id="event-details-container">
+                        {% if is_client %}
+                        <p class="empty-state">Loading event details…</p>
+                        {% else %}
+                        {% for t in tournaments %}
+                        {% if tournaments|length > 1 %}
+                        <h6 class="fw-bold mt-2 {% if not loop.first %}border-top pt-2{% endif %}">{{ t.name }}</h6>
+                        {% endif %}
+                        <p><strong>Name:</strong> {{ t.name }}</p>
+                        <p><strong>URL:</strong> <a href="https://challonge.com/{{ t.url }}" target="_blank">{{ t.url }}</a></p>
+                        <p><strong>Started:</strong> {{ t.started_at|default('Not started') }}</p>
+                        <p><strong>Completed:</strong> {{ t.completed_at|default('In progress') }}</p>
+                        {% endfor %}
+                        {% endif %}
+
+                        <!-- Custom Content Area -->
+                        {% if custom_content %}
+                        <div class="mt-4 pt-4 border-top">
+                            <h5>Additional Information</h5>
+                            {{ custom_content|safe }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <div class="footer">
+            <p>Generated by McChallonge on {{ current_date }}</p>
+            <p>
+                {% if show_only == "participants" %}
+                <a href="{{ asset_prefix }}index.html">Full Dashboard</a> | 
+                <a href="{{ asset_prefix }}matches">View Matches</a>
+                {% elif show_only == "matches" %}
+                <a href="{{ asset_prefix }}index.html">Full Dashboard</a> | 
+                <a href="{{ asset_prefix }}participants">View Participants</a>
+                {% else %}
+                <a href="{{ asset_prefix }}participants">Participants Only</a> | 
+                <a href="{{ asset_prefix }}matches">Matches Only</a>
+                {% endif %}
+                | <a href="https://github.com/AutoMcG/McChallonge" target="_blank">GitHub Repository</a>
+            </p>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="{{ asset_prefix }}static/js/bootstrap.bundle.min.js"></script>
+    {% if is_client %}
+    <script>
+        const API_CACHE_URL = {{ url_for('cache_data') | tojson }};
+        const API_CACHE_UPDATE_URL = {{ url_for('cache_data_update') | tojson }};
+        const API_CACHE_CLEAR_URL = {{ url_for('cache_data_clear') | tojson }};
+
+        const showOnly = {{ (show_only or '') | tojson }};
+
+        let cachedData = null;
+        let activeMatchStates = new Set(['complete', 'open']);
+        // null = not yet initialised; populated with all tournament keys on first load
+        let activeTournamentIds = null;
+
+        function getById(id) {
+            return document.getElementById(id);
+        }
+
+        function escapeHtml(value) {
+            const div = document.createElement('div');
+            div.textContent = value ?? '';
+            return div.innerHTML;
+        }
+
+        // ── Data helpers ──────────────────────────────────────────────────────────
+
+        function getAllTournamentEntries() {
+            return Object.entries(cachedData?.tournaments || {});
+        }
+
+        function getAllParticipants() {
+            return getAllTournamentEntries().flatMap(([key, entry]) => {
+                const tName = entry.tournament?.name || key;
+                return (entry.participants || []).map(p => ({
+                    ...p, _tournament_key: key, _tournament_name: tName,
+                }));
+            });
+        }
+
+        function getAllMatches() {
+            return getAllTournamentEntries().flatMap(([key, entry]) => {
+                const tName = entry.tournament?.name || key;
+                return (entry.matches || []).map(m => ({
+                    ...m, _tournament_key: key, _tournament_name: tName,
+                }));
+            });
+        }
+
+        function getAllParticipantMap() {
+            const map = new Map();
+            getAllTournamentEntries().forEach(([, entry]) => {
+                (entry.participants || []).forEach(p => map.set(p.id, p));
+            });
+            return map;
+        }
+
+        function getFilteredParticipants() {
+            const all = getAllParticipants();
+            const query = (getById('participant-name-filter')?.value || '').trim().toLowerCase();
+            return all.filter(p => {
+                const matchesTournament = !activeTournamentIds || activeTournamentIds.has(p._tournament_key);
+                const matchesName = !query || (p.name || '').toLowerCase().includes(query);
+                return matchesTournament && matchesName;
+            });
+        }
+
+        function getFilteredMatches() {
+            return getAllMatches().filter(m => {
+                const matchesTournament = !activeTournamentIds || activeTournamentIds.has(m._tournament_key);
+                const matchesState = activeMatchStates.has((m.state || '').toLowerCase());
+                return matchesTournament && matchesState;
+            });
+        }
+
+        // ── Status message ────────────────────────────────────────────────────────
+
+        function setStatusMessage(message, level) {
+            const status = getById('status-message');
+            if (!status) return;
+            if (!message) {
+                status.style.display = 'none';
+                status.className = 'alert status-message';
+                status.textContent = '';
+                return;
+            }
+            status.style.display = 'block';
+            status.className = `alert status-message alert-${level}`;
+            status.textContent = message;
+        }
+
+        // ── Render functions ──────────────────────────────────────────────────────
+
+        function renderTournamentSection() {
+            const allEntries = getAllTournamentEntries();
+            const selectedEntries = (activeTournamentIds && activeTournamentIds.size > 0)
+                ? allEntries.filter(([key]) => activeTournamentIds.has(key))
+                : allEntries;
+
+            const single = selectedEntries.length === 1 ? selectedEntries[0][1] : null;
+            const tournament = single?.tournament || {};
+
+            const name = getById('tournament-name');
+            const id = getById('tournament-id');
+            const status = getById('tournament-status');
+            const cacheMeta = getById('cache-meta');
+
+            if (name) {
+                if (single) {
+                    if (showOnly === 'participants') {
+                        name.textContent = `${tournament.name || 'Tournament'} - Participants`;
+                    } else if (showOnly === 'matches') {
+                        name.textContent = `${tournament.name || 'Tournament'} - Matches`;
+                    } else {
+                        name.textContent = tournament.name || 'Tournament Dashboard';
+                    }
+                } else {
+                    const count = selectedEntries.length || allEntries.length;
+                    name.textContent = showOnly === 'participants' ? 'Participants'
+                        : showOnly === 'matches' ? 'Matches'
+                        : `Tournament Dashboard (${count} tournaments)`;
+                }
+            }
+
+            if (id) {
+                id.textContent = single
+                    ? `Tournament ID: ${tournament.id ?? 'Unknown'}`
+                    : `${selectedEntries.length || allEntries.length} tournament(s) loaded`;
+            }
+
+            if (status) {
+                if (single) {
+                    const state = (tournament.state || 'unknown').toLowerCase();
+                    status.textContent = state.charAt(0).toUpperCase() + state.slice(1);
+                    status.classList.remove('status-underway', 'status-completed');
+                    status.classList.add(state === 'completed' ? 'status-completed' : 'status-underway');
+                    status.style.display = '';
+                } else {
+                    status.style.display = 'none';
+                }
+            }
+
+            if (cacheMeta) {
+                const times = allEntries.map(([, e]) => e.meta?.cached_at).filter(Boolean);
+                const latestTime = times.sort().pop();
+                cacheMeta.textContent = latestTime
+                    ? `Local cache updated at ${latestTime}`
+                    : 'Local cache has not been loaded yet.';
+            }
+
+            // Event Details panel — one block per tournament in the current selection
+            const detailsContainer = getById('event-details-container');
+            if (detailsContainer) {
+                if (selectedEntries.length === 0) {
+                    detailsContainer.innerHTML = '<p class="empty-state">No event data loaded.</p>';
+                } else {
+                    const multi = selectedEntries.length > 1;
+                    detailsContainer.innerHTML = selectedEntries.map(([, entry], idx) => {
+                        const t = entry.tournament || {};
+                        const slug = t.url || '';
+                        const urlHtml = slug
+                            ? `<a href="https://challonge.com/${escapeHtml(slug)}" target="_blank">${escapeHtml(slug)}</a>`
+                            : 'Not available';
+                        const header = multi
+                            ? `<h6 class="fw-bold ${idx > 0 ? 'border-top pt-2 mt-2' : ''}">${escapeHtml(t.name || 'Unknown')}</h6>`
+                            : '';
+                        return `
+                            ${header}
+                            <p><strong>Name:</strong> ${escapeHtml(t.name || 'Unknown')}</p>
+                            <p><strong>URL:</strong> ${urlHtml}</p>
+                            <p><strong>Started:</strong> ${escapeHtml(t.started_at || 'Not started')}</p>
+                            <p><strong>Completed:</strong> ${escapeHtml(t.completed_at || 'In progress')}</p>
+                        `;
+                    }).join('');
+                }
+            }
+        }
+
+        function renderParticipantsTable(participants) {
+            const table = document.querySelector('.participants-table');
+            const body = table?.querySelector('tbody');
+            if (!body) return;
+
+            const multiTournament = getAllTournamentEntries().length > 1;
+            if (table) table.classList.toggle('multi-tournament', multiTournament);
+
+            if (!participants || participants.length === 0) {
+                const cols = multiTournament ? 6 : 5;
+                body.innerHTML = `<tr><td colspan="${cols}" class="empty-state">No participants in local cache.</td></tr>`;
+                return;
+            }
+
+            body.innerHTML = participants
+                .map((participant, index) => {
+                    const wins = Number(participant.wins || 0);
+                    const losses = Number(participant.losses || 0);
+                    const total = wins + losses;
+                    const winRate = total > 0 ? `${Math.round((wins / total) * 100)}%` : 'N/A';
+                    const tournamentCell = multiTournament
+                        ? `<td>${escapeHtml(participant._tournament_name || '')}</td>`
+                        : '';
+                    return `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${escapeHtml(participant.name || 'Unknown')}</td>
+                            ${tournamentCell}
+                            <td>${wins}</td>
+                            <td>${losses}</td>
+                            <td>${winRate}</td>
+                        </tr>
+                    `;
+                })
+                .join('');
+        }
+
+        function renderMatches(matches) {
+            const container = getById('matches-container');
+            if (!container) return;
+
+            const multiTournament = getAllTournamentEntries().length > 1;
+
+            if (!matches || matches.length === 0) {
+                container.innerHTML = '<div class="empty-state">No matches in local cache.</div>';
+                return;
+            }
+
+            const participantsById = getAllParticipantMap();
+            container.innerHTML = matches
+                .map((match) => {
+                    const player1 = participantsById.get(match.player1_id)?.name || 'Player 1';
+                    const player2 = participantsById.get(match.player2_id)?.name || 'Player 2';
+                    const isPlayer1Winner = match.winner_id && match.winner_id === match.player1_id;
+                    const isPlayer2Winner = match.winner_id && match.winner_id === match.player2_id;
+                    const state = (match.state || 'pending').toLowerCase();
+                    const tournamentBadge = multiTournament
+                        ? `<span class="tournament-badge">${escapeHtml(match._tournament_name || '')}</span>`
+                        : '';
+                    return `
+                        <div class="match">
+                            <div class="players">
+                                <div class="player ${isPlayer1Winner ? 'winner' : ''}">${escapeHtml(player1)}</div>
+                                <div class="vs">VS</div>
+                                <div class="player ${isPlayer2Winner ? 'winner' : ''}">${escapeHtml(player2)}</div>
+                            </div>
+                            <div class="match-info">
+                                ${match.round != null ? `<span class="round">Round ${match.round}</span>` : ''}
+                                <span class="state ${state === 'complete' ? 'state-complete' : 'state-pending'}">
+                                    ${escapeHtml(state.charAt(0).toUpperCase() + state.slice(1))}
+                                </span>
+                                ${match.completed_at ? `<span class="date">${escapeHtml(match.completed_at)}</span>` : ''}
+                                ${tournamentBadge}
+                            </div>
+                        </div>
+                    `;
+                })
+                .join('');
+        }
+
+        // ── Filter builders ───────────────────────────────────────────────────────
+
+        function buildMatchStateFilters(matches) {
+            const container = getById('match-state-filters');
+            if (!container) return;
+
+            const states = [...new Set((matches || []).map(m => (m.state || 'pending').toLowerCase()))].sort();
+
+            container.innerHTML = states.map(state => {
+                const label = escapeHtml(state.charAt(0).toUpperCase() + state.slice(1));
+                const checked = activeMatchStates.has(state) ? 'checked' : '';
+                return `
+                    <div class="form-check form-check-inline mb-0">
+                        <input class="form-check-input match-state-checkbox" type="checkbox"
+                               id="filter-state-${escapeHtml(state)}" value="${escapeHtml(state)}" ${checked}>
+                        <label class="form-check-label" for="filter-state-${escapeHtml(state)}">${label}</label>
+                    </div>
+                `;
+            }).join('');
+
+            container.querySelectorAll('.match-state-checkbox').forEach(cb => {
+                cb.addEventListener('change', e => {
+                    if (e.target.checked) {
+                        activeMatchStates.add(e.target.value);
+                    } else {
+                        activeMatchStates.delete(e.target.value);
+                    }
+                    renderMatches(getFilteredMatches());
+                });
+            });
+        }
+
+        function buildTournamentFilters() {
+            const container = getById('tournament-filters');
+            if (!container) return;
+
+            const entries = getAllTournamentEntries();
+            if (entries.length <= 1) {
+                container.style.display = 'none';
+                return;
+            }
+            container.style.display = '';
+
+            container.innerHTML = entries.map(([key, entry]) => {
+                const name = entry.tournament?.name || key;
+                const checked = !activeTournamentIds || activeTournamentIds.has(key) ? 'checked' : '';
+                return `
+                    <div class="form-check form-check-inline mb-0">
+                        <input class="form-check-input tournament-filter-checkbox" type="checkbox"
+                               id="filter-tournament-${escapeHtml(key)}" value="${escapeHtml(key)}" ${checked}>
+                        <label class="form-check-label" for="filter-tournament-${escapeHtml(key)}">${escapeHtml(name)}</label>
+                    </div>
+                `;
+            }).join('');
+
+            container.querySelectorAll('.tournament-filter-checkbox').forEach(cb => {
+                cb.addEventListener('change', e => {
+                    if (e.target.checked) {
+                        activeTournamentIds.add(e.target.value);
+                    } else {
+                        activeTournamentIds.delete(e.target.value);
+                    }
+                    renderTournamentSection();
+                    renderParticipantsTable(getFilteredParticipants());
+                    renderMatches(getFilteredMatches());
+                });
+            });
+        }
+
+        // ── Dashboard orchestration ───────────────────────────────────────────────
+
+        function renderDashboard(data) {
+            cachedData = data;
+            // Initialise tournament filter to all keys on first load.
+            if (activeTournamentIds === null) {
+                activeTournamentIds = new Set(Object.keys(data.tournaments || {}));
+            }
+            renderTournamentSection();
+            buildTournamentFilters();
+            buildMatchStateFilters(getAllMatches());
+            renderParticipantsTable(getFilteredParticipants());
+            renderMatches(getFilteredMatches());
+        }
+
+        // ── API calls ─────────────────────────────────────────────────────────────
+
+        async function loadLocalCache() {
+            try {
+                const response = await fetch(API_CACHE_URL, { cache: 'no-store' });
+                if (!response.ok) {
+                    const payload = await response.json();
+                    throw new Error(payload.error || 'Failed to load local cache.');
+                }
+                const data = await response.json();
+                renderDashboard(data);
+                setStatusMessage('', 'info');
+            } catch (error) {
+                setStatusMessage(error.message, 'warning');
+            }
+        }
+
+        async function updateLocalCache() {
+            const button = getById('refresh-cache-btn');
+            if (button) {
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Updating...';
+            }
+
+            try {
+                const response = await fetch(API_CACHE_UPDATE_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                });
+
+                if (!response.ok) {
+                    const payload = await response.json();
+                    throw new Error(payload.error || 'Failed to update local cache.');
+                }
+
+                const data = await response.json();
+                // Reset tournament filter so newly added tournaments are checked by default.
+                activeTournamentIds = null;
+                renderDashboard(data);
+                setStatusMessage('Local cache updated successfully.', 'success');
+            } catch (error) {
+                setStatusMessage(error.message, 'danger');
+            } finally {
+                if (button) {
+                    button.disabled = false;
+                    button.innerHTML = '<i class="fas fa-sync-alt me-1"></i> Update Local Cache';
+                }
+            }
+        }
+
+        async function clearLocalCache() {
+            const button = getById('clear-cache-btn');
+            if (button) {
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Clearing...';
+            }
+
+            try {
+                const response = await fetch(API_CACHE_CLEAR_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                });
+
+                if (!response.ok) {
+                    const payload = await response.json();
+                    throw new Error(payload.error || 'Failed to clear cache.');
+                }
+
+                cachedData = null;
+                activeTournamentIds = null;
+                // Reset UI to empty state
+                renderTournamentSection();
+                renderParticipantsTable([]);
+                renderMatches([]);
+                const stateFilters = getById('match-state-filters');
+                if (stateFilters) stateFilters.innerHTML = '';
+                const tournFilters = getById('tournament-filters');
+                if (tournFilters) tournFilters.innerHTML = '';
+                const cacheMeta = getById('cache-meta');
+                if (cacheMeta) cacheMeta.textContent = 'Local cache has not been loaded yet.';
+                setStatusMessage('Cache cleared.', 'info');
+            } catch (error) {
+                setStatusMessage(error.message, 'danger');
+            } finally {
+                if (button) {
+                    button.disabled = false;
+                    button.innerHTML = '<i class="fas fa-trash-alt me-1"></i> Clear Cache';
+                }
+            }
+        }
+
+        // ── Initialisation ────────────────────────────────────────────────────────
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const refreshButton = getById('refresh-cache-btn');
+            if (refreshButton) {
+                refreshButton.addEventListener('click', updateLocalCache);
+            }
+
+            const clearButton = getById('clear-cache-btn');
+            if (clearButton) {
+                clearButton.addEventListener('click', clearLocalCache);
+            }
+
+            const nameFilter = getById('participant-name-filter');
+            if (nameFilter) {
+                nameFilter.addEventListener('input', () => {
+                    renderParticipantsTable(getFilteredParticipants());
+                });
+            }
+
+            loadLocalCache();
+        });
+    </script>
+    {% endif %}
+</body>
+</html>

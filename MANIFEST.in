@@ -1,0 +1,2 @@
+recursive-include mcchallonge/web/templates *.jinja.html
+recursive-include mcchallonge/web/static *.css *.js *.ttf *.woff2
