@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
-from flask import render_template, current_app
-from jinja2 import Environment, FileSystemLoader, BaseLoader
+from flask import render_template
+from jinja2 import Environment, FileSystemLoader
 
 def render_tournament_dashboard(
     tournament,
