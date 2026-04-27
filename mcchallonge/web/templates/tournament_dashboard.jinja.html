@@ -556,6 +556,10 @@
     <script src="{{ asset_prefix }}static/js/bootstrap.bundle.min.js"></script>
     {% if is_client %}
     <script>
+        const API_CACHE_URL = {{ url_for('cache_data') | tojson }};
+        const API_CACHE_UPDATE_URL = {{ url_for('cache_data_update') | tojson }};
+        const API_CACHE_CLEAR_URL = {{ url_for('cache_data_clear') | tojson }};
+
         const showOnly = {{ (show_only or '') | tojson }};
 
         let cachedData = null;
@@ -894,7 +898,7 @@
 
         async function loadLocalCache() {
             try {
-                const response = await fetch('/api/cache', { cache: 'no-store' });
+                const response = await fetch(API_CACHE_URL, { cache: 'no-store' });
                 if (!response.ok) {
                     const payload = await response.json();
                     throw new Error(payload.error || 'Failed to load local cache.');
@@ -915,7 +919,7 @@
             }
 
             try {
-                const response = await fetch('/api/cache/update', {
+                const response = await fetch(API_CACHE_UPDATE_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                 });
@@ -948,7 +952,7 @@
             }
 
             try {
-                const response = await fetch('/api/cache/clear', {
+                const response = await fetch(API_CACHE_CLEAR_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                 });
