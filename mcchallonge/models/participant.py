@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional
 import json
 
@@ -19,10 +19,11 @@ class Participant:
     @staticmethod
     def from_json(j: str):
         data = json.loads(j) if isinstance(j, str) else j
-        # Replace None with "empty" if needed
-        for k, v in data.items():
-            if v is None and k in ["id", "name", "wins", "losses"]:
-                data[k] = "empty"
+        data = dict(data)
+        # Coerce missing numeric fields to 0 rather than leaving them as None
+        for k in ["wins", "losses"]:
+            if data.get(k) is None:
+                data[k] = 0
         return Participant(**data)
 
     def __str__(self):

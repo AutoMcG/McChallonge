@@ -1,5 +1,3 @@
-from typing import Dict
-
 class ChallongeMocks:
     """Mock responses for Challonge API testing"""
     

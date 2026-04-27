@@ -1,4 +1,3 @@
-import requests
 from requests_oauthlib import OAuth2Session
 
 CHALLONGE_AUTH_BASE_URL = "https://api.challonge.com/oauth/authorize"
