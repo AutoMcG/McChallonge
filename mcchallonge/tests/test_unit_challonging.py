@@ -1,6 +1,3 @@
-import json
-import logging
-import os
 import pytest
 from unittest.mock import patch, MagicMock
 import requests
@@ -11,8 +8,6 @@ from ..models.tournament import Tournament
 from ..models.participant import Participant
 from ..models.match import Match
 from .test_data_mocks import ChallongeMocks
-
-logger = logging.getLogger(__name__)
 
 class UnitTestChallonging:
     @pytest.fixture
