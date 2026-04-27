@@ -21,7 +21,7 @@ def count_outcomes(matches: List[Match], pilots: List[Participant]) -> List[Part
 
     # Process each match to update wins/losses
     for match in complete_matches:
-        if hasattr(match, 'loser_id'):
+        if match.loser_id is not None:
             loser_id = match.loser_id
         else:
             # Determine loser_id from player IDs and winner_id
