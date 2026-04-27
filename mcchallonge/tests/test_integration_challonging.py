@@ -9,17 +9,28 @@ from mcchallonge.models.match import Match
 
 load_dotenv()
 
+# All tests in this module require live Challonge credentials and are excluded
+# from the default test run.  Run them explicitly with: pytest -m integration
+pytestmark = pytest.mark.integration
+
+
+def _get_credentials():
+    """Return (user, key) or skip the test if credentials are not available."""
+    user = os.environ.get("challonge_user")
+    key = os.environ.get("challonge_key")
+    if not user or not key:
+        pytest.skip("challonge_user and challonge_key must be set in environment")
+    return user, key
+
+
 class IntegrationTestChallonging:
     def test_real_prepare_session(self):
-        user = os.environ.get("challonge_user")
-        key = os.environ.get("challonge_key")
-        assert user and key, "challonge_user and challonge_key must be set in environment"
+        user, key = _get_credentials()
         session = challonging.prepare_session(user, key)
         assert isinstance(session, requests.Session)
 
     def test_get_tournaments_real(self):
-        user = os.environ.get("challonge_user")
-        key = os.environ.get("challonge_key")
+        user, key = _get_credentials()
         session = challonging.prepare_session(user, key)
         tournaments = challonging.get_tournaments(session)
         assert isinstance(tournaments, list)
@@ -28,8 +39,7 @@ class IntegrationTestChallonging:
             print(f"First tournament: {tournaments[0]}")
 
     def test_get_tournament_data_real(self):
-        user = os.environ.get("challonge_user")
-        key = os.environ.get("challonge_key")
+        user, key = _get_credentials()
         session = challonging.prepare_session(user, key)
         tournaments = challonging.get_tournaments(session)
         if not tournaments:
@@ -40,8 +50,7 @@ class IntegrationTestChallonging:
         print(f"Tournament: {tournament}")
 
     def test_get_participants_data_real(self):
-        user = os.environ.get("challonge_user")
-        key = os.environ.get("challonge_key")
+        user, key = _get_credentials()
         session = challonging.prepare_session(user, key)
         tournaments = challonging.get_tournaments(session)
         if not tournaments:
@@ -54,8 +63,7 @@ class IntegrationTestChallonging:
             print(f"First participant: {participants[0]}")
 
     def test_get_match_data_real(self):
-        user = os.environ.get("challonge_user")
-        key = os.environ.get("challonge_key")
+        user, key = _get_credentials()
         session = challonging.prepare_session(user, key)
         tournaments = challonging.get_tournaments(session)
         if not tournaments:
