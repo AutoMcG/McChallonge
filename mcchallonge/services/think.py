@@ -1,8 +1,6 @@
 from ..models.participant import Participant
 from ..models.match import Match
 
-from ..services import challonging
-
 from typing import List
 
 def count_outcomes(matches: List[Match], pilots: List[Participant]) -> List[Participant]:
