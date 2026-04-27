@@ -12,6 +12,15 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/AutoMcG/McChallonge",
     packages=find_packages(),
+    include_package_data=True,
+    package_data={
+        "mcchallonge": [
+            "web/templates/*.jinja.html",
+            "web/static/css/*.css",
+            "web/static/js/*.js",
+            "web/static/webfonts/*",
+        ],
+    },
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

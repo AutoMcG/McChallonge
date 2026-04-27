@@ -16,3 +16,11 @@ authors = [
 [project.urls]
 Homepage = "https://github.com/AutoMcG/McChallonge"
 Repository = "https://github.com/AutoMcG/McChallonge"
+
+[tool.setuptools.package-data]
+mcchallonge = [
+    "web/templates/*.jinja.html",
+    "web/static/css/*.css",
+    "web/static/js/*.js",
+    "web/static/webfonts/*",
+]
