@@ -6,7 +6,11 @@ from flask import Flask, render_template, jsonify, request, redirect, url_for
 from flask_frozen import Freezer
 
 from mcchallonge import config
-from mcchallonge.services.local_cache import load_cached_tournament_data, refresh_all_cached_tournaments
+from mcchallonge.services.local_cache import (
+    get_cache_file_path,
+    load_cached_tournament_data,
+    refresh_all_cached_tournaments,
+)
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -118,7 +122,6 @@ def cache_data_update():
 @app.route('/api/cache/clear', methods=['POST'])
 def cache_data_clear():
     """Delete the local cache file."""
-    from mcchallonge.services.local_cache import get_cache_file_path
     cache_path = get_cache_file_path()
     if cache_path.exists():
         cache_path.unlink()
@@ -131,9 +134,11 @@ def url_generator():
     yield '/index.html'
     yield '/participants'
     yield '/matches'
-    
-# We will handle static URLs manually in the templates
-# Flask-Freezer doesn't provide a simple way to transform URLs during freeze
+    # Freeze the cache JSON so the static build can serve tournament data.
+    # Only yield when the cache file already exists so freeze() doesn't fail
+    # with a 404 on machines that haven't populated the cache yet.
+    if get_cache_file_path().exists():
+        yield '/api/cache'
 
 if __name__ == '__main__':
     # Check if we should generate static files or run the development server
