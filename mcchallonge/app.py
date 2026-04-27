@@ -16,15 +16,11 @@ from mcchallonge.services.local_cache import (
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Determine template and static folder paths based on execution context
-if __name__ == '__main__' or 'mcchallonge.app' in sys.argv:
-    # Running as a module (-m mcchallonge.app)
-    template_folder = os.path.join(os.path.dirname(__file__), 'web', 'templates')
-    static_folder = os.path.join(os.path.dirname(__file__), 'web', 'static')
-else:
-    # Running as import or from another module
-    template_folder = "mcchallonge/web/templates"
-    static_folder = "mcchallonge/web/static"
+# Resolve template and static folders relative to this package file so they
+# work consistently regardless of execution mode or current working directory.
+package_dir = os.path.dirname(__file__)
+template_folder = os.path.join(package_dir, 'web', 'templates')
+static_folder = os.path.join(package_dir, 'web', 'static')
 
 # Initialize Flask app
 app = Flask(__name__, 
