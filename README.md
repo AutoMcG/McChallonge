@@ -299,6 +299,41 @@ pytest
 Integration tests hit the live Challonge API and are deselected by default.
 To run them, mark with `-m integration` and ensure credentials are set in `.env`.
 
+### Production Hosting Options
+
+#### Option 1: Reverse proxy with Nginx + Waitress
+
+Run the app behind a production WSGI server:
+
+```bash
+python -m mcchallonge.app serve --port 8000 --threads 8
+```
+
+This serves both LAN clients and loopback clients.
+Admin cache controls ("Update Local Cache" / "Clear Cache") are loopback-only:
+
+- Open `http://localhost:8000` or `http://127.0.0.1:8000` to use admin cache actions.
+- Open `http://<hostname>:8000` from LAN devices for read-only dashboard access.
+
+Nginx and systemd examples are available at:
+
+- `deploy/nginx/mcchallonge.conf`
+- `deploy/systemd/mcchallonge.service`
+
+#### Option 2: Serverless static hosting on S3/CloudFront
+
+Terraform and CI/CD scaffolding are included for fixed-filename static data hosting:
+
+- `infra/terraform/envs/prod`
+- `.github/workflows/infra.yml`
+- `.github/workflows/deploy-site.yml`
+- `.github/workflows/deploy-lambda.yml`
+
+Full guide:
+
+- `docs/serverless-s3-terraform-github-actions.md`
+- `infra/terraform/README.md`
+
 ---
 
 ## FAQ & Troubleshooting
