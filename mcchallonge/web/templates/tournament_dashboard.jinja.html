@@ -37,7 +37,8 @@
             apiCacheClearUrl: {{ url_for('cache_data_clear') | tojson }},
             clientDataMode: {{ (client_data_mode or 'api') | tojson }},
             clientDataRoot: {{ (client_data_root or '/data') | tojson }},
-            showOnly: {{ (show_only or '') | tojson }}
+            showOnly: {{ (show_only or '') | tojson }},
+            adminEnabled: {{ admin_enabled | default(false) | tojson }}
         };
     </script>
     <script src="{{ asset_prefix }}static/js/tournament_dashboard_client.js"></script>

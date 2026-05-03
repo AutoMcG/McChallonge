@@ -4,7 +4,7 @@ import time
 import sys
 import argparse
 import importlib
-from flask import Flask, render_template, jsonify, request, redirect, url_for
+from flask import Flask, render_template, jsonify, request, redirect, url_for, abort, has_request_context
 from flask_frozen import Freezer
 
 from mcchallonge import config
@@ -60,6 +60,16 @@ def _client_data_root() -> str:
         root = f'/{root}'
     return root.rstrip('/') or '/data'
 
+
+def _admin_enabled() -> bool:
+    # Inside a request: only loopback visitors get admin controls.
+    if has_request_context():
+        addr = request.remote_addr or ''
+        return addr == '127.0.0.1' or addr == '::1' or addr.startswith('127.')
+    # Outside a request context (e.g. static build): read config flag.
+    val = app.config.get('MCCHALLONGE_ADMIN_ENABLED')
+    return val if isinstance(val, bool) else True
+
 @app.route('/')
 def root_page():
     """Redirect root to /index.html for live server parity with static output."""
@@ -75,6 +85,7 @@ def tournament_page():
         client_rendered=True,
         client_data_mode=_client_data_mode(),
         client_data_root=_client_data_root(),
+        admin_enabled=_admin_enabled(),
         logo_url=_resolve_logo_url(),
     )
 
@@ -88,6 +99,7 @@ def participants_page():
         client_rendered=True,
         client_data_mode=_client_data_mode(),
         client_data_root=_client_data_root(),
+        admin_enabled=_admin_enabled(),
         show_only="participants",  # Signal to template to only show participants section
         logo_url=_resolve_logo_url(),
     )
@@ -102,6 +114,7 @@ def matches_page():
         client_rendered=True,
         client_data_mode=_client_data_mode(),
         client_data_root=_client_data_root(),
+        admin_enabled=_admin_enabled(),
         show_only="matches",  # Signal to template to only show matches section
         logo_url=_resolve_logo_url(),
     )
@@ -114,9 +127,18 @@ def cache_data():
         return jsonify({"error": "Local cache file not found. Click 'Update Local Cache' to create it."}), 404
     return jsonify(data)
 
+
+def _require_loopback():
+    """Abort with 403 if the request did not originate from loopback."""
+    addr = request.remote_addr
+    if addr not in ('127.0.0.1', '::1') and not (addr or '').startswith('127.'):
+        abort(403)
+
+
 @app.route('/api/cache/update', methods=['POST'])
 def cache_data_update():
     """Fetch latest data from Challonge and update local cache file."""
+    _require_loopback()
     body = request.get_json(silent=True) or {}
     requested_id = body.get('tournament_id')
 
@@ -138,6 +160,7 @@ def cache_data_update():
 @app.route('/api/cache/clear', methods=['POST'])
 def cache_data_clear():
     """Delete the local cache file."""
+    _require_loopback()
     cache_path = get_cache_file_path()
     if cache_path.exists():
         cache_path.unlink()
@@ -166,13 +189,15 @@ def _run_static_build() -> None:
     logger.info("Generating static site...")
 
     # Static hosting (S3/CloudFront) uses fixed JSON filenames under /data.
+    # Admin controls are never available in a static build — there's no server to call.
     app.config['MCCHALLONGE_CLIENT_DATA_MODE'] = 'fixed'
+    app.config['MCCHALLONGE_ADMIN_ENABLED'] = False
 
     freezer.freeze()
     logger.info("Static site generated in 'build' directory")
 
 
-def _run_waitress_server(host: str, port: int, threads: int) -> None:
+def _run_waitress_server(port: int, threads: int) -> None:
     try:
         waitress_module = importlib.import_module("waitress")
     except ImportError as exc:
@@ -183,13 +208,11 @@ def _run_waitress_server(host: str, port: int, threads: int) -> None:
 
     serve = getattr(waitress_module, "serve")
 
-    logger.info(
-        "Starting production WSGI server on %s:%s (threads=%s)",
-        host,
-        port,
-        threads,
-    )
-    serve(app, host=host, port=port, threads=threads)
+    # Bind on all interfaces so LAN clients can reach the app, and explicitly
+    # on loopback so the admin can use 127.0.0.1 to access cache-update controls.
+    listen = f"0.0.0.0:{port} 127.0.0.1:{port}"
+    logger.info("Starting production WSGI server on %s (threads=%s)", listen, threads)
+    serve(app, listen=listen, threads=threads)
 
 
 def _parse_args(argv: list[str]) -> argparse.Namespace:
@@ -205,7 +228,6 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         "serve",
         help="Run a production WSGI server (recommended behind Nginx).",
     )
-    serve_parser.add_argument("--host", default="127.0.0.1", help="Bind host.")
     serve_parser.add_argument("--port", type=int, default=8000, help="Bind port.")
     serve_parser.add_argument(
         "--threads",
@@ -225,7 +247,7 @@ def main(argv: list[str] | None = None) -> None:
         return
 
     if args.command == "serve":
-        _run_waitress_server(args.host, args.port, args.threads)
+        _run_waitress_server(args.port, args.threads)
         return
 
     _run_dev_server()

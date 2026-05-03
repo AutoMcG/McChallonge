@@ -6,6 +6,7 @@
 
     const CLIENT_DATA_MODE = cfg.clientDataMode || 'api';
     const CLIENT_DATA_ROOT = cfg.clientDataRoot || '/data';
+    const ADMIN_ENABLED = cfg.adminEnabled !== false;  // default true; false hides update/clear controls
 
     const FIXED_TOURNAMENT_URL = `${CLIENT_DATA_ROOT}/tournament.json`;
     const FIXED_PARTICIPANTS_URL = `${CLIENT_DATA_ROOT}/participants.json`;
@@ -656,6 +657,7 @@
         }
     }
 
+    // Reload the server's current JSON cache into the browser display (available to all users).
     async function updateLocalCache() {
         if (CLIENT_DATA_MODE === 'fixed') {
             setStatusMessage('Static mode is read-only. Data updates come from Lambda publishing /data/*.json.', 'info');
@@ -665,25 +667,18 @@
         const button = getById('refresh-cache-btn');
         if (button) {
             button.disabled = true;
-            button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Updating...';
+            button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Loading...';
         }
 
         try {
-            const response = await fetch(API_CACHE_UPDATE_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-            });
-
+            const response = await fetch(API_CACHE_URL, { cache: 'no-store' });
             if (!response.ok) {
                 const payload = await response.json();
-                throw new Error(payload.error || 'Failed to update local cache.');
+                throw new Error(payload.error || 'Failed to load local cache.');
             }
-
             const data = await response.json();
-            // Reset tournament filter so newly added tournaments are checked by default.
-            activeTournamentIds = null;
             renderDashboard(data);
-            setStatusMessage('Local cache updated successfully.', 'success');
+            setStatusMessage('', 'info');
         } catch (error) {
             setStatusMessage(error.message, 'danger');
         } finally {
@@ -694,48 +689,52 @@
         }
     }
 
-    async function clearLocalCache() {
-        if (CLIENT_DATA_MODE === 'fixed') {
-            setStatusMessage('Static mode is read-only. Clear data by replacing objects under /data in S3.', 'info');
-            return;
-        }
+    // Clear the browser's in-memory display (available to all users, does not touch the server file).
+    function clearLocalCache() {
+        cachedData = null;
+        activeTournamentIds = null;
+        renderTournamentSection();
+        renderParticipantsTable([]);
+        renderMatches([]);
+        const stateFilters = getById('match-state-filters');
+        if (stateFilters) stateFilters.innerHTML = '';
+        const tournFilters = getById('tournament-filters');
+        if (tournFilters) tournFilters.innerHTML = '';
+        const cacheMeta = getById('cache-meta');
+        if (cacheMeta) cacheMeta.textContent = 'Local cache has not been loaded yet.';
+        setStatusMessage('Display cleared.', 'info');
+    }
 
-        const button = getById('clear-cache-btn');
+    // Pull fresh data from Challonge and update the server's cache file (admin / loopback only).
+    async function syncFromChallonge() {
+        const button = getById('sync-challonge-btn');
         if (button) {
             button.disabled = true;
-            button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Clearing...';
+            button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Syncing...';
         }
 
         try {
-            const response = await fetch(API_CACHE_CLEAR_URL, {
+            const response = await fetch(API_CACHE_UPDATE_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
             });
 
             if (!response.ok) {
                 const payload = await response.json();
-                throw new Error(payload.error || 'Failed to clear cache.');
+                throw new Error(payload.error || 'Failed to sync from Challonge.');
             }
 
-            cachedData = null;
+            const data = await response.json();
+            // Reset tournament filter so newly added tournaments are visible by default.
             activeTournamentIds = null;
-            // Reset UI to empty state
-            renderTournamentSection();
-            renderParticipantsTable([]);
-            renderMatches([]);
-            const stateFilters = getById('match-state-filters');
-            if (stateFilters) stateFilters.innerHTML = '';
-            const tournFilters = getById('tournament-filters');
-            if (tournFilters) tournFilters.innerHTML = '';
-            const cacheMeta = getById('cache-meta');
-            if (cacheMeta) cacheMeta.textContent = 'Local cache has not been loaded yet.';
-            setStatusMessage('Cache cleared.', 'info');
+            renderDashboard(data);
+            setStatusMessage('Synced from Challonge successfully.', 'success');
         } catch (error) {
             setStatusMessage(error.message, 'danger');
         } finally {
             if (button) {
                 button.disabled = false;
-                button.innerHTML = '<i class="fas fa-trash-alt me-1"></i> Clear Cache';
+                button.innerHTML = '<i class="fas fa-cloud-download-alt me-1"></i> Sync from Challonge';
             }
         }
     }
@@ -748,19 +747,31 @@
         renderMatchSearchChips();
         syncMatchSearchModeControl();
 
+        // Reload and Clear are available to everyone (no Challonge API calls involved).
         const refreshButton = getById('refresh-cache-btn');
         if (refreshButton) {
-            refreshButton.addEventListener('click', updateLocalCache);
             if (CLIENT_DATA_MODE === 'fixed') {
                 refreshButton.style.display = 'none';
+            } else {
+                refreshButton.addEventListener('click', updateLocalCache);
             }
         }
 
         const clearButton = getById('clear-cache-btn');
         if (clearButton) {
-            clearButton.addEventListener('click', clearLocalCache);
             if (CLIENT_DATA_MODE === 'fixed') {
                 clearButton.style.display = 'none';
+            } else {
+                clearButton.addEventListener('click', clearLocalCache);
+            }
+        }
+
+        // Sync from Challonge is admin-only (loopback); backend enforces this independently.
+        const syncButton = getById('sync-challonge-btn');
+        if (syncButton) {
+            if (ADMIN_ENABLED && CLIENT_DATA_MODE !== 'fixed') {
+                syncButton.style.display = '';
+                syncButton.addEventListener('click', syncFromChallonge);
             }
         }
 
