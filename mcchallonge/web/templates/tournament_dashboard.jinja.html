@@ -560,6 +560,14 @@
         const API_CACHE_UPDATE_URL = {{ url_for('cache_data_update') | tojson }};
         const API_CACHE_CLEAR_URL = {{ url_for('cache_data_clear') | tojson }};
 
+        const CLIENT_DATA_MODE = {{ (client_data_mode or 'api') | tojson }};
+        const CLIENT_DATA_ROOT = {{ (client_data_root or '/data') | tojson }};
+
+        const FIXED_TOURNAMENT_URL = `${CLIENT_DATA_ROOT}/tournament.json`;
+        const FIXED_PARTICIPANTS_URL = `${CLIENT_DATA_ROOT}/participants.json`;
+        const FIXED_MATCHES_URL = `${CLIENT_DATA_ROOT}/matches.json`;
+        const FIXED_MANIFEST_URL = `${CLIENT_DATA_ROOT}/manifest.json`;
+
         const showOnly = {{ (show_only or '') | tojson }};
 
         let cachedData = null;
@@ -894,10 +902,78 @@
             renderMatches(getFilteredMatches());
         }
 
+        function normaliseByTournament(payload, valueSelector) {
+            if (!payload || typeof payload !== 'object') {
+                return {};
+            }
+
+            const source = payload.tournaments;
+            if (!source || typeof source !== 'object') {
+                return {};
+            }
+
+            const result = {};
+            Object.entries(source).forEach(([key, value]) => {
+                result[String(key)] = valueSelector(value);
+            });
+            return result;
+        }
+
+        function composeCachePayloadFromFixedFiles(tournamentPayload, participantsPayload, matchesPayload, manifestPayload) {
+            const tournamentsById = normaliseByTournament(tournamentPayload, value => value);
+            const participantsById = normaliseByTournament(participantsPayload, value => Array.isArray(value) ? value : []);
+            const matchesById = normaliseByTournament(matchesPayload, value => Array.isArray(value) ? value : []);
+            const manifestById = normaliseByTournament(manifestPayload, value => value || {});
+
+            const allTournamentIds = new Set([
+                ...Object.keys(tournamentsById),
+                ...Object.keys(participantsById),
+                ...Object.keys(matchesById),
+                ...Object.keys(manifestById),
+            ]);
+
+            const merged = {};
+            allTournamentIds.forEach(tournamentId => {
+                merged[tournamentId] = {
+                    tournament: tournamentsById[tournamentId] || { id: tournamentId, name: `Tournament ${tournamentId}` },
+                    participants: participantsById[tournamentId] || [],
+                    matches: matchesById[tournamentId] || [],
+                    meta: manifestById[tournamentId] || {},
+                };
+            });
+
+            return { tournaments: merged };
+        }
+
         // ── API calls ─────────────────────────────────────────────────────────────
 
         async function loadLocalCache() {
             try {
+                if (CLIENT_DATA_MODE === 'fixed') {
+                    const [tournamentResponse, participantsResponse, matchesResponse, manifestResponse] = await Promise.all([
+                        fetch(FIXED_TOURNAMENT_URL, { cache: 'no-store' }),
+                        fetch(FIXED_PARTICIPANTS_URL, { cache: 'no-store' }),
+                        fetch(FIXED_MATCHES_URL, { cache: 'no-store' }),
+                        fetch(FIXED_MANIFEST_URL, { cache: 'no-store' }),
+                    ]);
+
+                    if (!tournamentResponse.ok || !participantsResponse.ok || !matchesResponse.ok) {
+                        throw new Error('Failed to load static data files from /data.');
+                    }
+
+                    const [tournaments, participants, matches, manifest] = await Promise.all([
+                        tournamentResponse.json(),
+                        participantsResponse.json(),
+                        matchesResponse.json(),
+                        manifestResponse.ok ? manifestResponse.json() : Promise.resolve({}),
+                    ]);
+
+                    const data = composeCachePayloadFromFixedFiles(tournaments, participants, matches, manifest);
+                    renderDashboard(data);
+                    setStatusMessage('', 'info');
+                    return;
+                }
+
                 const response = await fetch(API_CACHE_URL, { cache: 'no-store' });
                 if (!response.ok) {
                     const payload = await response.json();
@@ -912,6 +988,11 @@
         }
 
         async function updateLocalCache() {
+            if (CLIENT_DATA_MODE === 'fixed') {
+                setStatusMessage('Static mode is read-only. Data updates come from Lambda publishing /data/*.json.', 'info');
+                return;
+            }
+
             const button = getById('refresh-cache-btn');
             if (button) {
                 button.disabled = true;
@@ -945,6 +1026,11 @@
         }
 
         async function clearLocalCache() {
+            if (CLIENT_DATA_MODE === 'fixed') {
+                setStatusMessage('Static mode is read-only. Clear data by replacing objects under /data in S3.', 'info');
+                return;
+            }
+
             const button = getById('clear-cache-btn');
             if (button) {
                 button.disabled = true;
@@ -991,11 +1077,17 @@
             const refreshButton = getById('refresh-cache-btn');
             if (refreshButton) {
                 refreshButton.addEventListener('click', updateLocalCache);
+                if (CLIENT_DATA_MODE === 'fixed') {
+                    refreshButton.style.display = 'none';
+                }
             }
 
             const clearButton = getById('clear-cache-btn');
             if (clearButton) {
                 clearButton.addEventListener('click', clearLocalCache);
+                if (CLIENT_DATA_MODE === 'fixed') {
+                    clearButton.style.display = 'none';
+                }
             }
 
             const nameFilter = getById('participant-name-filter');

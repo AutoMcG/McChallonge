@@ -1,0 +1,59 @@
+name: Deploy Static Site
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "mcchallonge/**"
+      - "requirements.txt"
+      - "pyproject.toml"
+      - "setup.py"
+      - ".github/workflows/deploy-site.yml"
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy-site:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Build static site
+        env:
+          MCCHALLONGE_CLIENT_DATA_MODE: fixed
+          MCCHALLONGE_CLIENT_DATA_ROOT: /data
+        run: python -m mcchallonge.app build
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Sync static content (excluding /data)
+        run: |
+          aws s3 sync build "s3://${{ vars.MCCHALLONGE_SITE_BUCKET }}" \
+            --delete \
+            --exclude "data/*"
+
+      - name: Invalidate CloudFront
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id "${{ vars.MCCHALLONGE_CLOUDFRONT_DISTRIBUTION_ID }}" \
+            --paths "/index.html" "/participants" "/matches" "/"

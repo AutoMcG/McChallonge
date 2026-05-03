@@ -1,0 +1,59 @@
+name: Deploy Data Updater Lambda
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "mcchallonge/lambda_handlers/**"
+      - "mcchallonge/services/**"
+      - "mcchallonge/models/**"
+      - "requirements.txt"
+      - ".github/workflows/deploy-lambda.yml"
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy-lambda:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Package Lambda
+        run: |
+          python -m pip install --upgrade pip
+          mkdir -p dist/lambda/package
+          pip install -r requirements.txt -t dist/lambda/package --no-compile
+          cp -r mcchallonge dist/lambda/package/
+          cd dist/lambda/package
+          zip -r ../update_data.zip .
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Update Lambda Function Code
+        run: |
+          aws lambda update-function-code \
+            --function-name "${{ vars.MCCHALLONGE_LAMBDA_FUNCTION_NAME }}" \
+            --zip-file "fileb://dist/lambda/update_data.zip"
+
+      - name: Publish Data Once After Deploy
+        run: |
+          aws lambda invoke \
+            --function-name "${{ vars.MCCHALLONGE_LAMBDA_FUNCTION_NAME }}" \
+            --payload '{}' \
+            /tmp/lambda-response.json
+          cat /tmp/lambda-response.json

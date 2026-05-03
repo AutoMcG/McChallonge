@@ -1,0 +1,14 @@
+aws_region           = "us-east-1"
+environment          = "prod"
+site_bucket_name     = "mcchallonge-prod-site"
+
+# Comma-separated list, e.g. "my_tournament,other_tournament"
+tournament_ids       = ""
+
+# Sensitive values: load from CI secrets in real deployments
+challonge_user       = ""
+challonge_key        = ""
+
+lambda_function_name = "mcchallonge-update-data"
+data_prefix          = "data"
+schedule_expression  = "rate(5 minutes)"

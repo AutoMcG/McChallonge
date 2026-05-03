@@ -2,6 +2,8 @@ import os
 import logging
 import time
 import sys
+import argparse
+import importlib
 from flask import Flask, render_template, jsonify, request, redirect, url_for
 from flask_frozen import Freezer
 
@@ -46,6 +48,18 @@ def _resolve_logo_url() -> str | None:
     # Relative paths are treated as files under Flask static/.
     return url_for('static', filename=configured_logo)
 
+
+def _client_data_mode() -> str:
+    mode = (app.config.get('MCCHALLONGE_CLIENT_DATA_MODE') or 'api').strip().lower()
+    return mode if mode in {'api', 'fixed'} else 'api'
+
+
+def _client_data_root() -> str:
+    root = (app.config.get('MCCHALLONGE_CLIENT_DATA_ROOT') or '/data').strip()
+    if not root.startswith('/'):
+        root = f'/{root}'
+    return root.rstrip('/') or '/data'
+
 @app.route('/')
 def root_page():
     """Redirect root to /index.html for live server parity with static output."""
@@ -59,6 +73,8 @@ def tournament_page():
         title="Tournament Dashboard",
         current_date=time.strftime("%Y-%m-%d %H:%M"),
         client_rendered=True,
+        client_data_mode=_client_data_mode(),
+        client_data_root=_client_data_root(),
         logo_url=_resolve_logo_url(),
     )
 
@@ -70,6 +86,8 @@ def participants_page():
         title="Participants",
         current_date=time.strftime("%Y-%m-%d %H:%M"),
         client_rendered=True,
+        client_data_mode=_client_data_mode(),
+        client_data_root=_client_data_root(),
         show_only="participants",  # Signal to template to only show participants section
         logo_url=_resolve_logo_url(),
     )
@@ -82,6 +100,8 @@ def matches_page():
         title="Matches",
         current_date=time.strftime("%Y-%m-%d %H:%M"),
         client_rendered=True,
+        client_data_mode=_client_data_mode(),
+        client_data_root=_client_data_root(),
         show_only="matches",  # Signal to template to only show matches section
         logo_url=_resolve_logo_url(),
     )
@@ -136,14 +156,80 @@ def url_generator():
     if get_cache_file_path().exists():
         yield '/api/cache'
 
+
+def _run_dev_server() -> None:
+    logger.info("Starting development server...")
+    app.run(debug=True)
+
+
+def _run_static_build() -> None:
+    logger.info("Generating static site...")
+
+    # Static hosting (S3/CloudFront) uses fixed JSON filenames under /data.
+    app.config['MCCHALLONGE_CLIENT_DATA_MODE'] = 'fixed'
+
+    freezer.freeze()
+    logger.info("Static site generated in 'build' directory")
+
+
+def _run_waitress_server(host: str, port: int, threads: int) -> None:
+    try:
+        waitress_module = importlib.import_module("waitress")
+    except ImportError as exc:
+        logger.error(
+            "Waitress is required for 'serve' mode. Install it with: pip install waitress"
+        )
+        raise SystemExit(1) from exc
+
+    serve = getattr(waitress_module, "serve")
+
+    logger.info(
+        "Starting production WSGI server on %s:%s (threads=%s)",
+        host,
+        port,
+        threads,
+    )
+    serve(app, host=host, port=port, threads=threads)
+
+
+def _parse_args(argv: list[str]) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        prog="python -m mcchallonge.app",
+        description="Run the McChallonge dashboard app.",
+    )
+    subparsers = parser.add_subparsers(dest="command")
+
+    subparsers.add_parser("build", help="Generate a static site using Frozen-Flask.")
+
+    serve_parser = subparsers.add_parser(
+        "serve",
+        help="Run a production WSGI server (recommended behind Nginx).",
+    )
+    serve_parser.add_argument("--host", default="127.0.0.1", help="Bind host.")
+    serve_parser.add_argument("--port", type=int, default=8000, help="Bind port.")
+    serve_parser.add_argument(
+        "--threads",
+        type=int,
+        default=8,
+        help="Number of Waitress worker threads.",
+    )
+
+    return parser.parse_args(argv)
+
+
+def main(argv: list[str] | None = None) -> None:
+    args = _parse_args(argv if argv is not None else sys.argv[1:])
+
+    if args.command == "build":
+        _run_static_build()
+        return
+
+    if args.command == "serve":
+        _run_waitress_server(args.host, args.port, args.threads)
+        return
+
+    _run_dev_server()
+
 if __name__ == '__main__':
-    # Check if we should generate static files or run the development server
-    import sys
-    if len(sys.argv) > 1 and sys.argv[1] == 'build':
-        logger.info("Generating static site...")
-        freezer.freeze()
-        logger.info("Static site generated in 'build' directory")
-    else:
-        logger.info("Starting development server...")
-        app.run(debug=True)
+    main()
 

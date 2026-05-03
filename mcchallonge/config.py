@@ -21,3 +21,9 @@ BUILD_DIR = os.environ.get('BUILD_DIR', 'build')
 # - MCCHALLONGE_LOGO_URL=https://example.com/logo.png
 # - MCCHALLONGE_LOGO_URL=img/logo.png
 MCCHALLONGE_LOGO_URL = os.environ.get('MCCHALLONGE_LOGO_URL')
+
+# Client-side data-loading mode for rendered pages.
+# - api: read from Flask API endpoints (/api/cache...)
+# - fixed: read fixed static files from MCCHALLONGE_CLIENT_DATA_ROOT
+MCCHALLONGE_CLIENT_DATA_MODE = os.environ.get('MCCHALLONGE_CLIENT_DATA_MODE', 'api').strip().lower()
+MCCHALLONGE_CLIENT_DATA_ROOT = os.environ.get('MCCHALLONGE_CLIENT_DATA_ROOT', '/data').strip() or '/data'

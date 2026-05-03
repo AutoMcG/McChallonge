@@ -34,6 +34,7 @@ setup(
         "requests-oauthlib>=2.0.0",
         "jinja2>=3.1.0",
         "python-dotenv>=1.0.0",
+        "waitress>=3.0.0",
     ],
     extras_require={
         "dev": [
