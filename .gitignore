@@ -128,6 +128,18 @@ ENV/
 env.bak/
 venv.bak/
 
+# Local secrets and generated local exports
+rce2sheet_token.json
+approved_participants.json
+client_secret.json
+client_secrets.json
+service_account.json
+service-account.json
+*-credentials.json
+*_credentials.json
+*.token.json
+*.tokens.json
+
 # Spyder project settings
 .spyderproject
 .spyproject

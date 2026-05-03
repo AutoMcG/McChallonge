@@ -1,0 +1,59 @@
+[build-system]
+requires = ["setuptools>=65", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mcchallonge"
+version = "0.1.0"
+description = "A Python package for interacting with Challonge API and generating tournament visualizations"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "AutoMcG" }]
+dependencies = [
+    "flask>=3.0.0",
+    "frozen-flask>=1.0.0",
+    "requests>=2.31.0",
+    "jinja2>=3.1.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+]
+
+[project.scripts]
+mcchallonge-dashboard = "mcchallonge.cli.generate_dashboard:main"
+mcchallonge-bulk-add = "mcchallonge.cli.bulk_add_participants:main"
+
+[project.urls]
+Homepage = "https://github.com/AutoMcG/McChallonge"
+Repository = "https://github.com/AutoMcG/McChallonge"
+
+[tool.setuptools]
+include-package-data = true
+packages = [
+    "mcchallonge",
+    "mcchallonge.cli",
+    "mcchallonge.models",
+    "mcchallonge.services",
+    "mcchallonge.tests",
+    "mcchallonge.web",
+]
+
+[tool.setuptools.package-dir]
+mcchallonge = "."
+"mcchallonge.cli" = "cli"
+"mcchallonge.models" = "models"
+"mcchallonge.services" = "services"
+"mcchallonge.tests" = "tests"
+
+[tool.setuptools.package-data]
+mcchallonge = [
+    "web/templates/*.jinja.html",
+    "web/static/css/*.css",
+    "web/static/js/*.js",
+    "web/static/webfonts/*",
+]
