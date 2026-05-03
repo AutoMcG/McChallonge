@@ -1,0 +1,26 @@
+{% macro render_client_empty_state(message) -%}
+<div class="empty-state">{{ message }}</div>
+{%- endmacro %}
+
+{% macro render_client_empty_row(colspan, message) -%}
+<tr>
+    <td colspan="{{ colspan }}" class="empty-state">{{ message }}</td>
+</tr>
+{%- endmacro %}
+
+{% macro render_client_loading_text(message) -%}
+<p class="empty-state">{{ message }}</p>
+{%- endmacro %}
+
+{% macro render_client_controls() -%}
+<div class="controls">
+    <button id="refresh-cache-btn" class="btn btn-light btn-sm" type="button">
+        <i class="fas fa-sync-alt me-1"></i> Update Local Cache
+    </button>
+    <button id="clear-cache-btn" class="btn btn-outline-light btn-sm" type="button">
+        <i class="fas fa-trash-alt me-1"></i> Clear Cache
+    </button>
+    <p id="cache-meta" class="cache-meta">Local cache has not been loaded yet.</p>
+    <div id="tournament-filters" class="d-flex flex-wrap gap-2 align-items-center mt-1 w-100"></div>
+</div>
+{%- endmacro %}

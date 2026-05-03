@@ -1,0 +1,59 @@
+{% from "partials/_dashboard_macros.jinja.html" import render_client_empty_row %}
+{% if not show_only or show_only == "participants" %}
+<div class="row">
+    <div class="col-lg-{% if show_only == "participants" %}12{% else %}8{% endif %} col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <span><i class="fas fa-users me-2"></i> Participants</span>
+                {% if is_client %}
+                <div class="d-flex flex-wrap gap-2 align-items-center">
+                    <input id="participant-name-filter" type="search" class="form-control form-control-sm filter-input"
+                           placeholder="Filter by name..." autocomplete="off">
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-body p-0">
+                <table class="table participants-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            {% if is_client %}<th class="tournament-col">Tournament</th>{% endif %}
+                            <th>Wins</th>
+                            <th>Losses</th>
+                            <th>Win Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if is_client %}
+                        {{ render_client_empty_row(6, "No cached participant data. Click \"Update Local Cache\".") }}
+                        {% else %}
+                        {% for participant in participants %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ participant.name }}</td>
+                            <td>{{ participant.wins }}</td>
+                            <td>{{ participant.losses }}</td>
+                            <td>
+                                {% if participant.wins + participant.losses > 0 %}
+                                    {{ "%.0f"|format(participant.wins / (participant.wins + participant.losses) * 100) }}%
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {% if not show_only %}
+    <div class="col-lg-4 col-md-12">
+        {% include "partials/_event_details_card.jinja.html" %}
+    </div>
+    {% endif %}
+</div>
+{% endif %}
