@@ -1,7 +1,6 @@
 import pytest
 from unittest.mock import patch, MagicMock
 import requests
-from requests_oauthlib import OAuth2Session
 
 from ..services import challonging
 from ..models.tournament import Tournament
@@ -109,14 +108,43 @@ class UnitTestChallonging:
         assert matches[0].winner_id == 1
         mock_session.get.assert_called_once()
 
-    def test_prepare_oauth_session(self, monkeypatch):
-        """Test OAuth session preparation"""
-        monkeypatch.setenv("CHALLONGE_CLIENT_ID", "test_id")
-        monkeypatch.setenv("CHALLONGE_CLIENT_SECRET", "test_secret")
-        
-        with patch("mcchallonge.services.challonging.get_challonge_oauth_session") as mock_oauth:
-            mock_oauth.return_value = MagicMock(spec=OAuth2Session)
-            session = challonging.prepare_oauth_session()
-            
-            assert isinstance(session, OAuth2Session)
-            mock_oauth.assert_called_once()
+    def test_bulk_add_participants(self, mock_session):
+        """Test adding participants individually to a tournament."""
+        def make_response(name, tid):
+            r = MagicMock()
+            r.status_code = 200
+            r.json.return_value = {"participant": {"id": tid, "name": name}}
+            return r
+
+        mock_session.post.side_effect = [
+            make_response("Crusher", 101),
+            make_response("Smasher", 102),
+        ]
+
+        participants = [
+            {"bot_name": "Crusher", "team_name": "Team Alpha"},
+            {"bot_name": "Smasher", "team_name": "Team Beta"},
+        ]
+        results = challonging.bulk_add_participants(mock_session, "test-tourney", participants)
+
+        assert len(results) == 2
+        assert results[0]["name"] == "Crusher"
+        assert results[1]["name"] == "Smasher"
+        assert mock_session.post.call_count == 2
+
+        first_url = mock_session.post.call_args_list[0].args[0]
+        assert "participants.json" in first_url
+        assert "participant[name]=Crusher" in first_url
+        assert "%5B" not in first_url
+
+    def test_bulk_add_participants_skips_missing_team_name(self, mock_session):
+        """Participants without team_name are still added successfully."""
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"participant": {"id": 103, "name": "Nameless"}}
+        mock_session.post.return_value = mock_response
+
+        challonging.bulk_add_participants(mock_session, "t", [{"bot_name": "Nameless"}])
+
+        call_url = mock_session.post.call_args.args[0]
+        assert "participant[name]=Nameless" in call_url
