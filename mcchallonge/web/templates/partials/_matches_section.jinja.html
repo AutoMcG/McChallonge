@@ -1,0 +1,76 @@
+<!-- Matches Section -->
+{% from "partials/_dashboard_macros.jinja.html" import render_client_empty_state %}
+{% if not show_only or show_only == "matches" %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <span><i class="fas fa-gamepad me-2"></i> Matches</span>
+        {% if is_client %}
+        <div class="d-flex flex-wrap gap-3 align-items-center">
+            <div id="match-state-filters" class="d-flex flex-wrap gap-2 align-items-center"></div>
+            <div class="d-flex flex-column gap-1 flex-grow-1">
+                <div class="match-filter-controls">
+                    <input id="match-text-filter-input" type="search" class="form-control form-control-sm match-filter-input"
+                           placeholder="Add match text filter..." autocomplete="off">
+                    <button id="match-text-filter-add" class="btn btn-light btn-sm" type="button">Add</button>
+                    <div class="match-filter-mode-group" role="radiogroup" aria-label="Chip match mode">
+                        <span class="small">Mode:</span>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="match-text-mode" id="match-text-mode-all" value="all">
+                            <label class="form-check-label" for="match-text-mode-all">All chips</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="match-text-mode" id="match-text-mode-any" value="any">
+                            <label class="form-check-label" for="match-text-mode-any">Any chip</label>
+                        </div>
+                    </div>
+                    <button id="match-text-filter-clear-all" class="btn btn-outline-light btn-sm" type="button">Clear chips</button>
+                </div>
+                <div id="match-text-filter-chips" class="match-filter-chips"></div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    <div class="card-body p-0">
+        {% if is_client %}
+        <div id="matches-container" class="matches-container">
+            {{ render_client_empty_state("No cached match data. Click \"Update Local Cache\".") }}
+        </div>
+        {% else %}
+        {% if matches %}
+        <div class="matches-container">
+            {% for match in matches %}
+            <div class="match">
+                <div class="players">
+                    {% set player1 = get_participant_by_id(match.player1_id) %}
+                    <div class="player {{ 'winner' if match.winner_id == match.player1_id }}">
+                        {{ player1.name if player1 else 'Player 1' }}
+                    </div>
+                    <div class="vs">VS</div>
+                    {% set player2 = get_participant_by_id(match.player2_id) %}
+                    <div class="player {{ 'winner' if match.winner_id == match.player2_id }}">
+                        {{ player2.name if player2 else 'Player 2' }}
+                    </div>
+                </div>
+                <div class="match-info">
+                    {% if match.round is not none %}
+                    <span class="round">Round {{ match.round }}</span>
+                    {% endif %}
+                    <span class="state {{ 'state-complete' if match.state == 'complete' else 'state-pending' }}">
+                        {{ match.state|capitalize }}
+                    </span>
+                    {% if match.completed_at %}
+                    <span class="date">{{ match.completed_at }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <p>No matches available.</p>
+        </div>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
+{% endif %}

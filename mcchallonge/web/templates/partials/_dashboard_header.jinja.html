@@ -1,0 +1,45 @@
+<!-- Tournament Header -->
+{% from "partials/_dashboard_macros.jinja.html" import render_client_controls %}
+
+{% if not show_only or show_only == "tournament" %}
+<div class="tournament-header">
+    {% if is_client %}
+    <h1 id="tournament-name">Tournament Dashboard</h1>
+    <p id="tournament-id">Tournament ID: Not loaded</p>
+    <div id="tournament-status" class="status status-underway">Unknown</div>
+    {{ render_client_controls() }}
+    {% else %}
+    <h1 id="tournament-name">{{ tournament.name if tournament else 'Tournament Dashboard' }}</h1>
+    <p id="tournament-id">Tournament ID: {{ tournament.id if tournament else '' }}</p>
+    <div id="tournament-status" class="status {{ 'status-completed' if tournament and tournament.state == 'completed' else 'status-underway' }}">
+        {{ tournament.state|capitalize if tournament else '' }}
+    </div>
+    {% endif %}
+
+    <div class="logo-container">
+        <img src="{{ logo_url|default('https://via.placeholder.com/150x150.png?text=Tournament') }}" alt="Tournament Logo">
+    </div>
+</div>
+{% elif show_only == "participants" %}
+<div class="tournament-header">
+    {% if is_client %}
+    <h1 id="tournament-name">Participants</h1>
+    <p id="tournament-id">Tournament ID: Not loaded</p>
+    {{ render_client_controls() }}
+    {% else %}
+    <h1 id="tournament-name">{{ tournament.name }} - Participants</h1>
+    <p id="tournament-id">Tournament ID: {{ tournament.id }}</p>
+    {% endif %}
+</div>
+{% elif show_only == "matches" %}
+<div class="tournament-header">
+    {% if is_client %}
+    <h1 id="tournament-name">Matches</h1>
+    <p id="tournament-id">Tournament ID: Not loaded</p>
+    {{ render_client_controls() }}
+    {% else %}
+    <h1 id="tournament-name">{{ tournament.name }} - Matches</h1>
+    <p id="tournament-id">Tournament ID: {{ tournament.id }}</p>
+    {% endif %}
+</div>
+{% endif %}
