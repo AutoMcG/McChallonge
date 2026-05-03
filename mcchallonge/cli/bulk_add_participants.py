@@ -59,8 +59,8 @@ def main() -> int:
     else:
         try:
             session = prepare_session_from_env()
-        except KeyError as exc:
-            print(f"Error: missing credential env var {exc}. Use -u/-k or set challonge_user/challonge_key.")
+        except ValueError as exc:
+            print(f"Error: {exc}. Use -u/-k or set challonge_user/challonge_key.")
             return 1
 
     with open(args.participants_json, encoding="utf-8") as f:
