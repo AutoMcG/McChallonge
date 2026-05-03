@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+from typing import Any
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials as UserCredentials
@@ -151,6 +152,25 @@ class SheetsClient:
         (keyring or file) without re-authorizing.
         """
         return cls(_build_service_from_user_oauth(client_secrets_path, token_path))
+
+    def list_sheet_titles(self, spreadsheet_id: str) -> list[str]:
+        """Return the titles of all sheets in the spreadsheet."""
+        meta = (
+            self._svc.spreadsheets()
+            .get(spreadsheetId=spreadsheet_id, fields="sheets.properties.title")
+            .execute()
+        )
+        return [s["properties"]["title"] for s in meta.get("sheets", [])]
+
+    def get_values(self, spreadsheet_id: str, range_name: str) -> list[list[Any]]:
+        """Return the cell values for the given range (A1 notation or sheet title)."""
+        resp = (
+            self._svc.spreadsheets()
+            .values()
+            .get(spreadsheetId=spreadsheet_id, range=range_name)
+            .execute()
+        )
+        return resp.get("values", [])
 
     def create_spreadsheet(self, title: str, first_sheet_title: str) -> tuple[str, int]:
         """Create a new spreadsheet. Returns (spreadsheet_id, first_sheet_id)."""

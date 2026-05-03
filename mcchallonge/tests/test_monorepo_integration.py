@@ -4,7 +4,10 @@ import sys
 import tempfile
 import os
 
+import pytest
 
+
+@pytest.mark.integration
 def test_monorepo_installation():
     """Verify that all packages can be installed together without version conflicts.
     

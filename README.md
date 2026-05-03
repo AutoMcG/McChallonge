@@ -48,7 +48,7 @@ rce2sheet build/event_12345.json \
 
 **Option B: Set in `.env` (for convenience)**
 
-Add to `mcchallonge/.env`:
+Add to the repo-root `.env`:
 
 ```text
 GOOGLE_OAUTH_CLIENT_SECRETS=path/to/client_secret.json

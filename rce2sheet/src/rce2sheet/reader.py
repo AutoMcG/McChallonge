@@ -28,7 +28,7 @@ def _spreadsheet_id_from_url(url: str) -> str:
     return m.group(1)
 
 
-def _is_yes(value: str) -> bool:
+def _is_yes(value: str | None) -> bool:
     return (value or "").strip().lower() == "yes"
 
 
@@ -102,22 +102,11 @@ def read_approved_participants(
     """Read a spreadsheet and return participants approved in all 3 columns."""
     spreadsheet_id = _spreadsheet_id_from_url(spreadsheet_url)
 
-    meta = (
-        client._svc.spreadsheets()
-        .get(spreadsheetId=spreadsheet_id, fields="sheets.properties.title")
-        .execute()
-    )
-    sheet_titles = [s["properties"]["title"] for s in meta.get("sheets", [])]
+    sheet_titles = client.list_sheet_titles(spreadsheet_id)
 
     competitions: list[ApprovedCompetition] = []
     for title in sheet_titles:
-        resp = (
-            client._svc.spreadsheets()
-            .values()
-            .get(spreadsheetId=spreadsheet_id, range=f"'{title}'")
-            .execute()
-        )
-        rows = resp.get("values", [])
+        rows = client.get_values(spreadsheet_id, f"'{title}'")
         # rows[0] is the header; skip it
         approved: list[ApprovedParticipant] = []
         for row in rows[1:]:

@@ -27,18 +27,13 @@ def _make_mock_client(sheets_data: dict[str, list[list]]) -> MagicMock:
     client = MagicMock()
     sheet_titles = list(sheets_data.keys())
 
-    client._svc.spreadsheets().get().execute.return_value = {
-        "sheets": [{"properties": {"title": t}} for t in sheet_titles]
-    }
+    client.list_sheet_titles.return_value = sheet_titles
 
-    def values_get_side_effect(**kwargs):
-        title = kwargs["range"].strip("'")
-        rows = sheets_data.get(title, [])
-        mock = MagicMock()
-        mock.execute.return_value = {"values": rows}
-        return mock
+    def get_values_side_effect(spreadsheet_id, range_name):
+        title = range_name.strip("'")
+        return sheets_data.get(title, [])
 
-    client._svc.spreadsheets().values().get.side_effect = values_get_side_effect
+    client.get_values.side_effect = get_values_side_effect
     return client
 
 
