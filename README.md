@@ -20,6 +20,14 @@ python -m venv venv
 pip install -r requirements.txt
 ```
 
+For monorepo development with both packages in one shared venv:
+
+```bat
+python -m venv venv
+.\venv\Scripts\activate
+pip install -r requirements-dev.txt
+```
+
 To deactivate:
 
 ```bash

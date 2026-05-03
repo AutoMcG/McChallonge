@@ -95,3 +95,46 @@ def get_match_data(
         logger.info(f"Filtered to {len(matches)} matches with state(s): {filter_states}")
 
     return matches
+
+
+def bulk_add_participants(
+    session: requests.Session,
+    tournament_id_or_url: str,
+    participants: list[dict],
+    verbose: bool = False,
+) -> list[dict]:
+    """Add participants to a tournament one at a time via the Challonge v1 API.
+
+    Each entry in *participants* must have a ``bot_name`` key (used as the
+    display name).
+
+    Returns the list of created participant dicts as returned by the API.
+    """
+    from urllib.parse import quote
+
+    URL = f"{CHALLONGE_API_V1}/tournaments/{tournament_id_or_url}/participants.json"
+
+    created = []
+    for p in participants:
+        url_with_params = f"{URL}?participant[name]={quote(str(p['bot_name']), safe='')}"
+        if verbose:
+            logger.info(f"POST {url_with_params}")
+
+        response = session.post(url_with_params)
+
+        if verbose:
+            logger.info(f"Response status: {response.status_code} {response.reason}")
+            logger.info(f"Response body: {response.text[:500]}")
+
+        response.raise_for_status()
+
+        resp_data = response.json()
+        if isinstance(resp_data, dict) and "participant" in resp_data:
+            created.append(resp_data["participant"])
+        elif isinstance(resp_data, list):
+            created.extend(item["participant"] for item in resp_data if "participant" in item)
+        else:
+            logger.warning(f"Unexpected API response shape for '{p['bot_name']}': {resp_data}")
+
+    logger.info(f"Added {len(created)} participant(s) to tournament '{tournament_id_or_url}'")
+    return created
