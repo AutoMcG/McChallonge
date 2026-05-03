@@ -5,29 +5,54 @@ from ..models.tournament import Tournament
 from ..models.participant import Participant
 from ..models.match import Match
 
-logger = logging.getLogger(__name__) 
+logger = logging.getLogger(__name__)
 
-CHALLONGE_API_V1= "https://api.challonge.com/v1"
+CHALLONGE_API_V1 = "https://api.challonge.com/v1"
+
+
+def _get_headers() -> dict:
+    """Get standard HTTP headers for Challonge API requests."""
+    return {
+        "Accept": "application/json",
+        "User-Agent": "McChallonger",
+        "Accept-Encoding": "gzip, deflate",
+    }
+
 
 def prepare_session(user: str, api_key: str) -> requests.Session:
-    challonger = (user, api_key)
-    headers = {"Accept": "application/json", 
-              "User-Agent": "McChallonger", 
-              "Accept-Encoding": "gzip, deflate"}
-    s = requests.Session() 
-    s.auth = challonger
-    s.headers.update(headers)
+    """Create a requests session authenticated with Challonge API credentials.
+    
+    Args:
+        user: Challonge username
+        api_key: Challonge API key
+        
+    Returns:
+        Authenticated requests.Session
+    """
+    s = requests.Session()
+    s.auth = (user, api_key)
+    s.headers.update(_get_headers())
     return s
 
 def prepare_session_from_env() -> requests.Session:
-    challonger = (os.environ['challonge_user'], os.environ['challonge_key'])
-    headers = {"Accept": "application/json", 
-              "User-Agent": "McChallonger", 
-              "Accept-Encoding": "gzip, deflate"}
-    s = requests.Session() 
-    s.auth = challonger
-    s.headers.update(headers)
-    return s
+    """Create a requests session using Challonge credentials from environment variables.
+    
+    Expects challonge_user and challonge_key to be set in environment.
+    
+    Returns:
+        Authenticated requests.Session
+        
+    Raises:
+        ValueError: If environment variables are not set
+    """
+    user = os.environ.get("challonge_user")
+    key = os.environ.get("challonge_key")
+    if not user or not key:
+        raise ValueError(
+            "Challonge API credentials not configured. "
+            "Set environment variables: challonge_user, challonge_key"
+        )
+    return prepare_session(user, key)
 
 def get_tournaments(session: requests.Session) -> list[Tournament]:
     URL = f'{CHALLONGE_API_V1}/tournaments.json'
@@ -45,14 +70,18 @@ def get_tournaments(session: requests.Session) -> list[Tournament]:
     return tournaments
 
 def get_tournament_data(session: requests.Session, tournament_id_or_url: str) -> Tournament:
-    URL = f'{CHALLONGE_API_V1}/tournaments/{tournament_id_or_url}.json'
+    URL = f"{CHALLONGE_API_V1}/tournaments/{tournament_id_or_url}.json"
     logger.info(f"Getting tournament data from Challonge API at {URL}")
     
     response = session.get(URL)
     response.raise_for_status()
     logger.info(f"Received response: {response.status_code} {response.reason}")
     
-    tournament_data = response.json()["tournament"]
+    try:
+        tournament_data = response.json()["tournament"]
+    except (KeyError, ValueError) as e:
+        logger.error(f"Failed to parse tournament data from API response: {e}")
+        raise ValueError(f"Unexpected API response format") from e
     return Tournament(**tournament_data)
 
 def get_participants_data(session: requests.Session, tournament_id_or_url: str) -> list[Participant]:
@@ -98,6 +127,10 @@ def bulk_add_participants(
 
     Each entry in *participants* must have a ``bot_name`` key (used as the
     display name).
+    
+    Note: URLs are constructed manually with literal brackets (not percent-encoded)
+    because the Challonge API (Rails-based) requires this format for nested params.
+    Using requests.post(params=...) would percent-encode brackets, breaking the call.
 
     Returns the list of created participant dicts as returned by the API.
     """
@@ -107,6 +140,7 @@ def bulk_add_participants(
 
     created = []
     for p in participants:
+        # Manually construct URL with literal brackets for Challonge API compatibility
         url_with_params = f"{URL}?participant[name]={quote(str(p['bot_name']), safe='')}"
         if verbose:
             logger.info(f"POST {url_with_params}")
@@ -119,11 +153,18 @@ def bulk_add_participants(
 
         response.raise_for_status()
 
-        resp_data = response.json()
+        try:
+            resp_data = response.json()
+        except ValueError as e:
+            logger.error(f"Failed to parse JSON response for '{p['bot_name']}': {e}")
+            raise ValueError(f"Invalid API response format") from e
+            
         if isinstance(resp_data, dict) and "participant" in resp_data:
             created.append(resp_data["participant"])
         elif isinstance(resp_data, list):
-            created.extend(item["participant"] for item in resp_data if "participant" in item)
+            created.extend(
+                item["participant"] for item in resp_data if "participant" in item
+            )
         else:
             logger.warning(f"Unexpected API response shape for '{p['bot_name']}': {resp_data}")
 

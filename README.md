@@ -244,6 +244,21 @@ is stored in your OS keyring automatically, so you don't need this set for subse
 Alternatively, use service account auth by setting `GOOGLE_APPLICATION_CREDENTIALS`.
 See `.env.example` for both options.
 
+### Dashboard Appearance (optional, for mcchallonge)
+
+Customize the dashboard logo by setting `MCCHALLONGE_LOGO_URL` in `.env`:
+
+```text
+# Absolute URL
+MCCHALLONGE_LOGO_URL=https://example.com/logo.png
+
+# Or relative path from static folder
+MCCHALLONGE_LOGO_URL=img/logo.png
+```
+
+If not set, the dashboard displays without a logo. The logo appears in the header
+of the main dashboard page.
+
 ---
 
 ## Other CLI tools
@@ -283,3 +298,59 @@ pytest
 
 Integration tests hit the live Challonge API and are deselected by default.
 To run them, mark with `-m integration` and ensure credentials are set in `.env`.
+
+---
+
+## FAQ & Troubleshooting
+
+### Keyring not available: `RuntimeError: Failed to save token`
+
+**Problem:** rce2sheet is trying to save your Google OAuth token to the OS keyring, but keyring support is not available (e.g., running in WSL, Docker without D-Bus, or SSH session).
+
+**Solution:** Force file-based token storage by setting the env var:
+
+```bash
+export RCE2SHEET_TOKEN_BACKEND=file
+```
+
+Then run rce2sheet as normal. The token will be saved as plaintext JSON in the default location (`rce2sheet_token.json` or custom path via `--oauth-token`).
+
+**Warning:** File-based tokens are less secure than keyring storage. Only use this when keyring is unavailable.
+
+### Google OAuth: "Use --oauth-client-secrets to authorize for the first time"
+
+**Problem:** You ran rce2sheet or rce2sheet-read without `--oauth-client-secrets` and don't have a stored token.
+
+**Solution:** On your first run, provide the client secrets file (or set `GOOGLE_OAUTH_CLIENT_SECRETS` env var):
+
+```bash
+rce2sheet build/event.json --oauth-client-secrets client_secret.json --title "..."
+```
+
+A browser window will open for authorization. After login, the token is stored in your keyring.
+On subsequent runs (same machine), omit the flag—the stored token is used automatically.
+
+### Challonge API: "KeyError: 'challonge_user' / 'challonge_key'"
+
+**Problem:** `mcchallonge` can't find your Challonge credentials.
+
+**Solution:** Ensure `.env` is in the repo root and contains:
+
+```text
+challonge_user=your_username
+challonge_key=your_api_key
+```
+
+Get your API key from: https://challonge.com/settings/developer
+
+### Flask dashboard won't start: "Address already in use"
+
+**Problem:** Port 5000 is already in use (e.g., another Flask instance is running).
+
+**Solution:** Either stop the other process, or run on a different port:
+
+```bash
+FLASK_RUN_PORT=5001 python -m mcchallonge.app
+```
+
+Then open http://127.0.0.1:5001
