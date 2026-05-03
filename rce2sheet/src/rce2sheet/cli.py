@@ -23,7 +23,8 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--oauth-client-secrets",
-        help="Path to OAuth client secrets JSON for user login flow",
+        help="Path to OAuth client secrets JSON for user login flow. "
+        "Falls back to GOOGLE_OAUTH_CLIENT_SECRETS env var if not provided.",
     )
     parser.add_argument(
         "--oauth-token",
@@ -45,23 +46,35 @@ def main() -> int:
 
     event = SheetEvent.from_json_file(args.event_json)
 
-    if args.oauth_client_secrets:
+    # Determine OAuth client secrets path: explicit arg > env var > None
+    oauth_client_secrets = args.oauth_client_secrets or os.environ.get(
+        "GOOGLE_OAUTH_CLIENT_SECRETS"
+    )
+    if oauth_client_secrets:
         client = SheetsClient.from_user_oauth(
-            args.oauth_client_secrets,
+            oauth_client_secrets,
             token_path=args.oauth_token,
         )
     else:
         credentials_path = args.credentials or os.environ.get(
             "GOOGLE_APPLICATION_CREDENTIALS"
         )
-        if not credentials_path:
-            print(
-                "Error: Google auth required. Use either --oauth-client-secrets "
-                "for user login or --credentials / GOOGLE_APPLICATION_CREDENTIALS "
-                "for service account auth."
-            )
-            return 1
-        client = SheetsClient.from_credentials_file(credentials_path)
+        if credentials_path:
+            client = SheetsClient.from_credentials_file(credentials_path)
+        else:
+            # No explicit auth flag — try a previously stored OAuth token.
+            try:
+                client = SheetsClient.from_user_oauth(
+                    None, token_path=args.oauth_token
+                )
+            except RuntimeError as exc:
+                print(
+                    f"Error: {exc}\n"
+                    "Use --oauth-client-secrets or set GOOGLE_OAUTH_CLIENT_SECRETS env var "
+                    "to authorize for the first time, or --credentials / GOOGLE_APPLICATION_CREDENTIALS "
+                    "for service account auth."
+                )
+                return 1
 
     spreadsheet_id = event_to_spreadsheet(event, client, spreadsheet_title=args.title)
     print(

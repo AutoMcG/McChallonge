@@ -23,12 +23,35 @@ Use an OAuth client secrets JSON (Desktop app) to sign in interactively. The fir
 opens a browser and stores a refreshable token in your OS keyring by default
 (Windows Credential Manager on Windows).
 
-If keyring is unavailable, rce2sheet falls back to the `--oauth-token` file path.
-You can force file storage by setting `RCE2SHEET_TOKEN_BACKEND=file`.
+**First authorization** (explicit argument or env var):
 
 ```bash
-rce2sheet build/event_7187.json --oauth-client-secrets client_secret.json --oauth-token token.json
+# Explicit argument
+rce2sheet build/event_7187.json --oauth-client-secrets client_secret.json --title "..."
 ```
+
+Or set in `.env` (repo root) to avoid repeating it:
+
+```bash
+# Add to .env:
+GOOGLE_OAUTH_CLIENT_SECRETS=client_secret.json
+
+# Then run without the flag:
+rce2sheet build/event_7187.json --title "..."
+```
+
+See `../.env.example` for setup instructions.
+
+**Subsequent runs** (token automatically loaded from keyring):
+
+```bash
+rce2sheet build/event_7187.json --title "..."
+```
+
+**Advanced options:**
+
+- Force file storage instead of keyring: `RCE2SHEET_TOKEN_BACKEND=file`
+- Specify token path: `--oauth-token /path/to/token.json`
 
 ### Service Account
 
@@ -38,16 +61,26 @@ Use a service account key JSON:
 rce2sheet build/event_7187.json --credentials service_account.json
 ```
 
-Or set environment variable:
+Or set environment variable in `.env`:
 
 ```bash
-set GOOGLE_APPLICATION_CREDENTIALS=service_account.json
+# Add to .env:
+GOOGLE_APPLICATION_CREDENTIALS=path/to/service_account.json
+
+# Then run:
+rce2sheet build/event_7187.json
 ```
 
 ## Usage
 
 ```bash
 rce2sheet build/event_7187.json --oauth-client-secrets client_secret.json --title "RoboRumble 2026"
+```
+
+Or with env var (after setting `GOOGLE_OAUTH_CLIENT_SECRETS` in `.env`):
+
+```bash
+rce2sheet build/event_7187.json --title "RoboRumble 2026"
 ```
 
 Or as a module:

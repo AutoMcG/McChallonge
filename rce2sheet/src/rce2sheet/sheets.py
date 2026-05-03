@@ -93,8 +93,14 @@ def _save_oauth_token(token_path: str, token_json: str) -> None:
 
 
 def _build_service_from_user_oauth(
-    client_secrets_path: str, token_path: str
+    client_secrets_path: str | None, token_path: str
 ):
+    """Build a Sheets service using OAuth user credentials.
+
+    If a valid token is already stored (keyring or file), ``client_secrets_path``
+    is not needed and may be ``None``.  It is only required when no stored token
+    exists and an interactive browser-based authorization must be performed.
+    """
     creds = None
 
     token_json = _load_oauth_token(token_path)
@@ -109,6 +115,12 @@ def _build_service_from_user_oauth(
         creds.refresh(Request())
 
     if not creds or not creds.valid:
+        if not client_secrets_path:
+            raise RuntimeError(
+                "No stored OAuth token found for key '%s'. "
+                "Run with --oauth-client-secrets to authorize for the first time."
+                % token_path
+            )
         flow = InstalledAppFlow.from_client_secrets_file(client_secrets_path, SCOPES)
         creds = flow.run_local_server(port=0)
 
@@ -129,8 +141,15 @@ class SheetsClient:
 
     @classmethod
     def from_user_oauth(
-        cls, client_secrets_path: str, token_path: str = "rce2sheet_token.json"
+        cls,
+        client_secrets_path: str | None,
+        token_path: str = "rce2sheet_token.json",
     ) -> "SheetsClient":
+        """Build a client using OAuth user credentials.
+
+        Pass ``client_secrets_path=None`` to use a previously stored token
+        (keyring or file) without re-authorizing.
+        """
         return cls(_build_service_from_user_oauth(client_secrets_path, token_path))
 
     def create_spreadsheet(self, title: str, first_sheet_title: str) -> tuple[str, int]:

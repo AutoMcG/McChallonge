@@ -1,7 +1,6 @@
 import pytest
 from unittest.mock import patch, MagicMock
 import requests
-from requests_oauthlib import OAuth2Session
 
 from ..services import challonging
 from ..models.tournament import Tournament
@@ -108,18 +107,6 @@ class UnitTestChallonging:
         assert matches[0].state == "complete"
         assert matches[0].winner_id == 1
         mock_session.get.assert_called_once()
-
-    def test_prepare_oauth_session(self, monkeypatch):
-        """Test OAuth session preparation"""
-        monkeypatch.setenv("CHALLONGE_CLIENT_ID", "test_id")
-        monkeypatch.setenv("CHALLONGE_CLIENT_SECRET", "test_secret")
-        
-        with patch("mcchallonge.services.challonging.get_challonge_oauth_session") as mock_oauth:
-            mock_oauth.return_value = MagicMock(spec=OAuth2Session)
-            session = challonging.prepare_oauth_session()
-            
-            assert isinstance(session, OAuth2Session)
-            mock_oauth.assert_called_once()
 
     def test_bulk_add_participants(self, mock_session):
         """Test adding participants individually to a tournament."""

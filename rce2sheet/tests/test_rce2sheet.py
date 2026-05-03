@@ -223,7 +223,8 @@ def test_cli_uses_service_account_when_oauth_not_provided(monkeypatch):
     export_mock.assert_called_once_with(event, svc_client, spreadsheet_title=None)
 
 
-def test_cli_requires_auth_arguments(monkeypatch, capsys):
+def test_cli_uses_stored_token_when_no_auth_flag_provided(monkeypatch):
+    """If no --oauth-client-secrets/--credentials given, try stored keyring token."""
     parser_mock = MagicMock()
     parser_mock.parse_args.return_value = Namespace(
         event_json="event.json",
@@ -236,9 +237,75 @@ def test_cli_requires_auth_arguments(monkeypatch, capsys):
 
     event = SheetEvent.from_dict(SAMPLE_EVENT_DICT)
     monkeypatch.setattr(cli.SheetEvent, "from_json_file", MagicMock(return_value=event))
+    monkeypatch.delenv("GOOGLE_APPLICATION_CREDENTIALS", raising=False)
+
+    stored_client = MagicMock()
+    oauth_ctor = MagicMock(return_value=stored_client)
+    monkeypatch.setattr(cli.SheetsClient, "from_user_oauth", oauth_ctor)
+
+    export_mock = MagicMock(return_value="spreadsheet_123")
+    monkeypatch.setattr(cli, "event_to_spreadsheet", export_mock)
+
+    exit_code = cli.main()
+
+    assert exit_code == 0
+    oauth_ctor.assert_called_once_with(None, token_path="rce2sheet_token.json")
+
+
+def test_cli_uses_oauth_client_secrets_env_var_when_arg_not_provided(monkeypatch):
+    """If no --oauth-client-secrets arg, check GOOGLE_OAUTH_CLIENT_SECRETS env var."""
+    parser_mock = MagicMock()
+    parser_mock.parse_args.return_value = Namespace(
+        event_json="event.json",
+        credentials=None,
+        oauth_client_secrets=None,
+        oauth_token="rce2sheet_token.json",
+        title="Event Title",
+    )
+    monkeypatch.setattr(cli, "build_parser", lambda: parser_mock)
+    monkeypatch.setenv("GOOGLE_OAUTH_CLIENT_SECRETS", "env_client_secret.json")
+
+    event = SheetEvent.from_dict(SAMPLE_EVENT_DICT)
+    monkeypatch.setattr(cli.SheetEvent, "from_json_file", MagicMock(return_value=event))
+
+    oauth_client = MagicMock()
+    oauth_ctor = MagicMock(return_value=oauth_client)
+    monkeypatch.setattr(cli.SheetsClient, "from_user_oauth", oauth_ctor)
+
+    export_mock = MagicMock(return_value="spreadsheet_123")
+    monkeypatch.setattr(cli, "event_to_spreadsheet", export_mock)
+
+    exit_code = cli.main()
+
+    assert exit_code == 0
+    # Should use the env var path, not try keyring
+    oauth_ctor.assert_called_once_with("env_client_secret.json", token_path="rce2sheet_token.json")
+
+
+def test_cli_fails_when_no_auth_and_no_stored_token(monkeypatch, capsys):
+    parser_mock = MagicMock()
+    parser_mock.parse_args.return_value = Namespace(
+        event_json="event.json",
+        credentials=None,
+        oauth_client_secrets=None,
+        oauth_token="rce2sheet_token.json",
+        title=None,
+    )
+    monkeypatch.setattr(cli, "build_parser", lambda: parser_mock)
+
+    event = SheetEvent.from_dict(SAMPLE_EVENT_DICT)
+    monkeypatch.setattr(cli.SheetEvent, "from_json_file", MagicMock(return_value=event))
+    monkeypatch.delenv("GOOGLE_APPLICATION_CREDENTIALS", raising=False)
+    monkeypatch.delenv("GOOGLE_OAUTH_CLIENT_SECRETS", raising=False)
+
+    monkeypatch.setattr(
+        cli.SheetsClient,
+        "from_user_oauth",
+        MagicMock(side_effect=RuntimeError("No stored OAuth token found")),
+    )
 
     exit_code = cli.main()
 
     captured = capsys.readouterr()
     assert exit_code == 1
-    assert "Google auth required" in captured.out
+    assert "--oauth-client-secrets" in captured.out

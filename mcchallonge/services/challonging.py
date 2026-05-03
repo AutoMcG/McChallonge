@@ -1,8 +1,6 @@
 import os
 import requests
-import logging  
-from requests_oauthlib import OAuth2Session
-from .oauth_client import get_challonge_oauth_session
+import logging
 from ..models.tournament import Tournament
 from ..models.participant import Participant
 from ..models.match import Match
@@ -30,13 +28,6 @@ def prepare_session_from_env() -> requests.Session:
     s.auth = challonger
     s.headers.update(headers)
     return s
-
-def prepare_oauth_session() -> OAuth2Session:
-    client_id = os.environ["CHALLONGE_CLIENT_ID"]
-    client_secret = os.environ["CHALLONGE_CLIENT_SECRET"]
-    redirect_uri = os.environ.get("CHALLONGE_REDIRECT_URI", "http://localhost:8080/callback")
-    oauth_session = get_challonge_oauth_session(client_id, client_secret, redirect_uri)
-    return oauth_session
 
 def get_tournaments(session: requests.Session) -> list[Tournament]:
     URL = f'{CHALLONGE_API_V1}/tournaments.json'
