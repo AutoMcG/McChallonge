@@ -72,3 +72,67 @@ def test_parse_competition_page_extracts_robot_rows():
     assert competition.bots[0].bot_name == "Hammer Time"
     assert competition.bots[0].team_name == "Team Steel"
     assert competition.bots[0].status == "Registered"
+
+
+def test_parse_competition_page_prefers_comp_title_selector():
+    competition_html = """
+    <html>
+      <body>
+        <h1 class="comp-title">Sportsman Beetleweight</h1>
+        <table>
+          <tr>
+            <th>Robot</th>
+            <th>Team</th>
+            <th>Status</th>
+          </tr>
+          <tr>
+            <td>Clamp Champ</td>
+            <td>Team Grip</td>
+            <td>Registered</td>
+          </tr>
+        </table>
+      </body>
+    </html>
+    """
+
+    competition = parse_competition_page(
+        "https://www.robotcombatevents.com/events/7187/competitions/777888",
+        competition_html,
+    )
+
+    assert competition.competition_id == "777888"
+    assert competition.competition_name == "Sportsman Beetleweight"
+    assert len(competition.bots) == 1
+    assert competition.bots[0].bot_name == "Clamp Champ"
+
+
+def test_parse_competition_page_comp_title_excludes_nested_span_text():
+    competition_html = """
+    <html>
+      <body>
+        <h1 class="comp-title">
+          Sportsman Beetleweight
+          <span>2026</span>
+        </h1>
+        <table>
+          <tr>
+            <th>Robot</th>
+            <th>Team</th>
+            <th>Status</th>
+          </tr>
+          <tr>
+            <td>Clamp Champ</td>
+            <td>Team Grip</td>
+            <td>Registered</td>
+          </tr>
+        </table>
+      </body>
+    </html>
+    """
+
+    competition = parse_competition_page(
+        "https://www.robotcombatevents.com/events/7187/competitions/777889",
+        competition_html,
+    )
+
+    assert competition.competition_name == "Sportsman Beetleweight"

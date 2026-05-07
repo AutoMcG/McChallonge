@@ -159,14 +159,21 @@ def bulk_add_participants(
             logger.error(f"Failed to parse JSON response for '{p['bot_name']}': {e}")
             raise ValueError(f"Invalid API response format") from e
             
-        if isinstance(resp_data, dict) and "participant" in resp_data:
-            created.append(resp_data["participant"])
-        elif isinstance(resp_data, list):
-            created.extend(
-                item["participant"] for item in resp_data if "participant" in item
+        if not (isinstance(resp_data, dict) and "participant" in resp_data):
+            raise ValueError(
+                f"Unexpected API response shape while creating '{p['bot_name']}': {resp_data}"
             )
-        else:
-            logger.warning(f"Unexpected API response shape for '{p['bot_name']}': {resp_data}")
+
+        participant = resp_data["participant"]
+        created_name = str(participant.get("name", "")).strip().lower()
+        requested_name = str(p.get("bot_name", "")).strip().lower()
+        if requested_name and created_name and created_name != requested_name:
+            raise ValueError(
+                "Created participant name does not match requested name: "
+                f"requested='{p.get('bot_name')}', created='{participant.get('name')}'"
+            )
+
+        created.append(participant)
 
     logger.info(f"Added {len(created)} participant(s) to tournament '{tournament_id_or_url}'")
     return created
