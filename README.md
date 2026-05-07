@@ -150,6 +150,57 @@ mcchallonge-bulk-add approved_participants.json abc123def --competition "Fairywe
 
 ---
 
+### Optional: Two-phase orchestration scripts
+
+If you want a guided flow across export/sheet creation and later Challonge import,
+use the scripts in `scripts/`.
+
+Phase 1 creates event JSON, creates the spreadsheet, and writes a manifest file:
+
+```bash
+python scripts/orchestrate_phase1.py 7187 --title "Tussle At TC"
+```
+
+Default outputs:
+
+- `build/event_7187.json`
+- `build/event_7187_assets.json` (manifest with spreadsheet URL and generated asset paths)
+
+Phase 2 reads approved participants from the spreadsheet URL in the manifest,
+prompts for the Challonge tournament ID per `sheet_title`, and runs bulk-add for each mapping:
+
+```bash
+python scripts/orchestrate_phase2.py build/event_7187_assets.json
+```
+
+You can skip a competition during prompts by leaving the tournament ID blank.
+
+For non-interactive runs, provide a mapping file:
+
+```bash
+python scripts/orchestrate_phase2.py build/event_7187_assets.json --mapping-file build/tournament_mappings.json
+```
+
+`build/tournament_mappings.json` can be either format:
+
+```json
+{
+  "Sportsman Beetleweight": "beetle_2026",
+  "Featherweight": "feather_2026"
+}
+```
+
+or:
+
+```json
+[
+  { "sheet_title": "Sportsman Beetleweight", "tournament_id": "beetle_2026" },
+  { "sheet_title": "Featherweight", "tournament_id": "feather_2026" }
+]
+```
+
+---
+
 ### Step 6 — Run the match dashboard
 
 Start the Flask dashboard to show match status across all brackets.

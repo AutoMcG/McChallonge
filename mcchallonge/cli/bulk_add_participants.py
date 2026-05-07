@@ -80,11 +80,29 @@ def main() -> int:
             print(f"  {comp['sheet_title']}: no approved participants, skipping.")
             continue
 
-        print(f"  {comp['sheet_title']}: adding {len(participants)} participant(s)...")
+        requested_count = len(participants)
+        print(f"  {comp['sheet_title']}: adding {requested_count} participant(s)...")
         results = bulk_add_participants(session, args.tournament_id, participants, verbose=getattr(args, 'verbose', False))
+        created_count = len(results)
+        if created_count == 0 and requested_count > 0:
+            print(
+                f"Error: Challonge returned no created participants for '{comp['sheet_title']}'. "
+                "Enable -v for request/response details."
+            )
+            return 1
+
+        if created_count != requested_count:
+            print(
+                f"Warning: Requested {requested_count}, created {created_count} for '{comp['sheet_title']}'."
+            )
+
         total_added += len(results)
         for entry in results:
             print(f"    + {entry.get('name', '?')} (id={entry.get('id')})")
 
     print(f"Done. Added {total_added} participant(s) to tournament '{args.tournament_id}'.")
     return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

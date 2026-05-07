@@ -46,7 +46,7 @@ def parse_competition_links(event_id: int, event_html: str, base_url: str) -> li
 
 def _find_robot_table(soup: BeautifulSoup):
     candidates = soup.find_all("table")
-    expected_headers = {"robot", "team", "status"}
+    expected_headers = {"bot", "team", "status"}
 
     for table in candidates:
         headers = {
@@ -71,7 +71,7 @@ def _header_index_map(table) -> dict[str, int]:
         if not text:
             continue
         lowered = text.lower()
-        if "robot" in lowered or "name" in lowered:
+        if "bot" in lowered or "name" in lowered:
             mapping.setdefault("bot_name", idx)
         if "team" in lowered:
             mapping.setdefault("team_name", idx)
@@ -86,8 +86,15 @@ def _header_index_map(table) -> dict[str, int]:
 def parse_competition_page(competition_url: str, competition_html: str) -> RCECompetition:
     soup = BeautifulSoup(competition_html, "html.parser")
 
-    subtitle_el = soup.select_one(".info-panel-subtitle > p:nth-child(1)")
-    title = _clean_text(subtitle_el.get_text(" ", strip=True)) if subtitle_el else None
+    title_el = soup.select_one("h1.comp-title")
+    if title_el:
+        direct_text = " ".join(
+            text.strip() for text in title_el.find_all(string=True, recursive=False) if text.strip()
+        )
+        title = _clean_text(direct_text)
+    else:
+        subtitle_el = soup.select_one(".info-panel-subtitle > p:nth-child(1)")
+        title = _clean_text(subtitle_el.get_text(" ", strip=True)) if subtitle_el else None
 
     competition = RCECompetition(
         competition_id=_competition_id_from_url(competition_url),
