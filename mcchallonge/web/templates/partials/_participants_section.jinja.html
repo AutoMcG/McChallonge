@@ -31,7 +31,16 @@
                         {% for participant in participants %}
                         <tr>
                             <td>{{ loop.index }}</td>
-                            <td>{{ participant.name }}</td>
+                            <td>
+                                <span class="participant-name-cell">
+                                    {% if participant.img %}
+                                    <img class="bot-thumb" src="{{ participant.img }}" alt="{{ participant.name }}" loading="lazy">
+                                    {% else %}
+                                    <span class="bot-thumb bot-thumb-placeholder" aria-hidden="true"><i class="fas fa-robot"></i></span>
+                                    {% endif %}
+                                    <span>{{ participant.name }}</span>
+                                </span>
+                            </td>
                             <td>{{ participant.wins }}</td>
                             <td>{{ participant.losses }}</td>
                             <td>

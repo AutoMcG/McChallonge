@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from . import challonging, think
+from .participant_images import enrich_participants_with_cached_images, load_approved_participants_index
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +37,10 @@ def load_cached_tournament_data() -> dict[str, Any] | None:
     return _migrate_legacy(data)
 
 
-def refresh_cached_tournament_data(tournament_id: str) -> dict[str, Any]:
+def refresh_cached_tournament_data(
+    tournament_id: str,
+    approved_images_index: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """Fetch latest data for one tournament and update the shared cache file."""
     session = challonging.prepare_session_from_env()
 
@@ -44,6 +48,12 @@ def refresh_cached_tournament_data(tournament_id: str) -> dict[str, Any]:
     participants = challonging.get_participants_data(session, tournament_id)
     matches = challonging.get_match_data(session, tournament_id)
     updated_participants = think.count_outcomes(matches, participants)
+    enrich_participants_with_cached_images(
+        updated_participants,
+        tournament.name or str(tournament_id),
+        approved_images_index,
+        allow_download=False,
+    )
 
     entry: dict[str, Any] = {
         "tournament": tournament.__dict__,
@@ -80,7 +90,8 @@ def refresh_cached_tournament_data(tournament_id: str) -> dict[str, Any]:
 def refresh_all_cached_tournaments(tournament_ids: list[str]) -> dict[str, Any]:
     """Refresh cache for all given tournament IDs and return the full cache."""
     result: dict[str, Any] = {}
+    approved_images_index = load_approved_participants_index()
     for tournament_id in tournament_ids:
-        result = refresh_cached_tournament_data(tournament_id)
+        result = refresh_cached_tournament_data(tournament_id, approved_images_index)
     return result
 
