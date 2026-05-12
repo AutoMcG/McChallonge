@@ -9,9 +9,11 @@ from flask_frozen import Freezer
 
 from mcchallonge import config
 from mcchallonge.services.local_cache import (
+    clear_match_underway_in_cache,
     get_cache_file_path,
     load_cached_tournament_data,
     refresh_all_cached_tournaments,
+    set_match_underway_in_cache,
 )
 from mcchallonge.services.underway_banners import (
     generate_underway_banners,
@@ -138,6 +140,22 @@ def matches_page():
     )
 
 
+@app.route('/queue')
+def queue_page():
+    """Render the queue page."""
+    return render_template(
+        'queue.jinja.html',
+        title="Match Queue",
+        current_date=time.strftime("%Y-%m-%d %H:%M"),
+        client_rendered=True,
+        underway_source_mode=_underway_source_mode(),
+        client_data_mode=_client_data_mode(),
+        client_data_root=_client_data_root(),
+        admin_enabled=_admin_enabled(),
+        logo_url=_resolve_logo_url(),
+    )
+
+
 @app.route('/underway')
 def underway_page():
     """Render PNG banners for currently underway matches."""
@@ -243,6 +261,56 @@ def cache_data_clear():
     if cache_path.exists():
         cache_path.unlink()
     return jsonify({"message": "Cache cleared."})
+
+
+@app.route('/api/cache/match/underway', methods=['POST'])
+def cache_mark_match_underway():
+    """Mark a cached match as underway (admin only)."""
+    _require_loopback()
+    body = request.get_json(silent=True) or {}
+    tournament_key = str(body.get('tournament_key') or '').strip()
+    match_id = str(body.get('match_id') or '').strip()
+
+    if not tournament_key or not match_id:
+        return jsonify({"error": "Both 'tournament_key' and 'match_id' are required."}), 400
+
+    try:
+        data = set_match_underway_in_cache(tournament_key, match_id)
+        try:
+            generate_underway_banners(data)
+        except Exception:
+            logger.exception("Match was marked underway but banner regeneration failed")
+        return jsonify(data)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        logger.exception("Failed to mark cached match as underway")
+        return jsonify({"error": f"Failed to mark match underway: {exc}"}), 500
+
+
+@app.route('/api/cache/match/underway/clear', methods=['POST'])
+def cache_clear_match_underway():
+    """Clear underway status from a cached match (admin only)."""
+    _require_loopback()
+    body = request.get_json(silent=True) or {}
+    tournament_key = str(body.get('tournament_key') or '').strip()
+    match_id = str(body.get('match_id') or '').strip()
+
+    if not tournament_key or not match_id:
+        return jsonify({"error": "Both 'tournament_key' and 'match_id' are required."}), 400
+
+    try:
+        data = clear_match_underway_in_cache(tournament_key, match_id)
+        try:
+            generate_underway_banners(data)
+        except Exception:
+            logger.exception("Match underway status was cleared but banner regeneration failed")
+        return jsonify(data)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        logger.exception("Failed to clear cached match underway status")
+        return jsonify({"error": f"Failed to clear match underway status: {exc}"}), 500
 
 @freezer.register_generator
 def url_generator():

@@ -3,7 +3,7 @@
  */
 
 import { getById, escapeHtml } from './helpers.js';
-import { cachedData, activeTournamentIds } from './state.js';
+import { cachedData, activeTournamentIds, config } from './state.js';
 import { getAllTournamentEntries, getAllParticipantMap } from './data.js';
 import { getRoundMetadata, getBracketForMatch } from './round-metadata.js';
 import { getFilteredMatches, getFilteredParticipants } from './filters.js';
@@ -238,8 +238,31 @@ export function renderMatches(matches) {
                 const isPlayer1Winner = match.winner_id && match.winner_id === match.player1_id;
                 const isPlayer2Winner = match.winner_id && match.winner_id === match.player2_id;
                 const state = (match.state || 'pending').toLowerCase();
+                const isUnderway = Boolean(match.underway_at);
+                const canSetUnderway = config.adminEnabled
+                    && config.showOnly === 'queue'
+                    && state !== 'complete'
+                    && !isUnderway;
+                const canClearUnderway = config.adminEnabled
+                    && config.showOnly === 'queue'
+                    && isUnderway;
                 const tournamentBadge = multiTournament
                     ? `<span class="tournament-badge">${escapeHtml(match._tournament_name || '')}</span>`
+                    : '';
+                const tournamentKey = String(match._tournament_key || match.tournament_id || '');
+                const underwayButton = canSetUnderway
+                    ? `<button type="button" class="btn btn-sm btn-outline-warning match-underway-btn"
+                         data-tournament-key="${escapeAttribute(tournamentKey)}"
+                         data-match-id="${escapeAttribute(match.id)}">
+                        <i class="fas fa-play me-1"></i>Set Underway
+                    </button>`
+                    : '';
+                const clearUnderwayButton = canClearUnderway
+                    ? `<button type="button" class="btn btn-sm btn-outline-secondary match-clear-underway-btn"
+                         data-tournament-key="${escapeAttribute(tournamentKey)}"
+                         data-match-id="${escapeAttribute(match.id)}">
+                        <i class="fas fa-times me-1"></i>Clear Underway
+                    </button>`
                     : '';
                 return `
                     <div class="match">
@@ -261,6 +284,8 @@ export function renderMatches(matches) {
                             </span>
                             ${match.completed_at ? `<span class="date">${escapeHtml(match.completed_at)}</span>` : ''}
                             ${tournamentBadge}
+                            ${underwayButton}
+                            ${clearUnderwayButton}
                         </div>
                     </div>
                 `;
