@@ -4,8 +4,7 @@
 
 import { config } from './state.js';
 import { setCachedData, setActiveTournamentIds } from './state.js';
-import { renderDashboard } from './dashboard.js';
-import { getById, setStatusMessage } from './helpers.js';
+import { dashboardEvents, DASHBOARD_EVENT } from './events.js';
 
 const FIXED_TOURNAMENT_URL = '/data/tournament.json';
 const FIXED_PARTICIPANTS_URL = '/data/participants.json';
@@ -57,9 +56,21 @@ function composeCachePayloadFromFixedFiles(tournamentPayload, participantsPayloa
     return { tournaments: merged };
 }
 
-function renderDashboardAndResetSelection(data) {
+function emitDashboardDataLoaded(data) {
+    dashboardEvents.dispatchEvent(new CustomEvent(DASHBOARD_EVENT.DATA_LOADED, {
+        detail: { data },
+    }));
+}
+
+function emitStatus(message, level) {
+    dashboardEvents.dispatchEvent(new CustomEvent(DASHBOARD_EVENT.STATUS, {
+        detail: { message, level },
+    }));
+}
+
+function emitDashboardDataLoadedAndResetSelection(data) {
     setActiveTournamentIds(null);
-    renderDashboard(data);
+    emitDashboardDataLoaded(data);
 }
 
 export async function loadLocalCache() {
@@ -72,8 +83,8 @@ export async function loadLocalCache() {
                 fetch(FIXED_MANIFEST_URL, UNCACHED_FETCH_OPTIONS).then(r => r.json()),
             ]);
             const data = composeCachePayloadFromFixedFiles(tournamentPayload, participantsPayload, matchesPayload, manifestPayload);
-            renderDashboard(data);
-            setStatusMessage('', 'info');
+            emitDashboardDataLoaded(data);
+            emitStatus('', 'info');
             return;
         }
 
@@ -82,24 +93,22 @@ export async function loadLocalCache() {
             throw new Error(`Failed to load cache: ${response.statusText}`);
         }
         const data = await response.json();
-        renderDashboard(data);
-        setStatusMessage('', 'info');
+        emitDashboardDataLoaded(data);
+        emitStatus('', 'info');
     } catch (error) {
-        setStatusMessage(error.message, 'warning');
+        emitStatus(error.message, 'warning');
     }
 }
 
 export async function updateLocalCache() {
     if (config.clientDataMode === 'fixed') {
-        setStatusMessage('Static mode is read-only. Data updates come from Lambda publishing /data/*.json.', 'info');
+        emitStatus('Static mode is read-only. Data updates come from Lambda publishing /data/*.json.', 'info');
         return;
     }
 
-    const button = getById('refresh-cache-btn');
-    if (button) {
-        button.disabled = true;
-        button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Loading...';
-    }
+    dashboardEvents.dispatchEvent(new CustomEvent(DASHBOARD_EVENT.ACTION_STARTED, {
+        detail: { action: 'update-cache' },
+    }));
 
     try {
         const response = await fetch(config.apiCacheUrl, { cache: 'no-store' });
@@ -107,38 +116,28 @@ export async function updateLocalCache() {
             throw new Error(`Failed to load cache: ${response.statusText}`);
         }
         const data = await response.json();
-        renderDashboardAndResetSelection(data);
-        setStatusMessage('', 'info');
+        emitDashboardDataLoadedAndResetSelection(data);
+        emitStatus('', 'info');
     } catch (error) {
-        setStatusMessage(error.message, 'danger');
+        emitStatus(error.message, 'danger');
     } finally {
-        if (button) {
-            button.disabled = false;
-            button.innerHTML = '<i class="fas fa-sync-alt me-1"></i> Update Local Cache';
-        }
+        dashboardEvents.dispatchEvent(new CustomEvent(DASHBOARD_EVENT.ACTION_FINISHED, {
+            detail: { action: 'update-cache' },
+        }));
     }
 }
 
 export function clearLocalCache() {
     setCachedData(null);
     setActiveTournamentIds(null);
-    const bracketFilters = getById('match-bracket-filters');
-    if (bracketFilters) bracketFilters.innerHTML = '';
-    const stateFilters = getById('match-state-filters');
-    if (stateFilters) stateFilters.innerHTML = '';
-    const tournFilters = getById('tournament-filters');
-    if (tournFilters) tournFilters.innerHTML = '';
-    const cacheMeta = getById('cache-meta');
-    if (cacheMeta) cacheMeta.textContent = 'Local cache has not been loaded yet.';
-    setStatusMessage('Display cleared.', 'info');
+    dashboardEvents.dispatchEvent(new CustomEvent(DASHBOARD_EVENT.DATA_CLEARED));
+    emitStatus('Display cleared.', 'info');
 }
 
 export async function syncFromChallonge() {
-    const button = getById('sync-challonge-btn');
-    if (button) {
-        button.disabled = true;
-        button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Syncing...';
-    }
+    dashboardEvents.dispatchEvent(new CustomEvent(DASHBOARD_EVENT.ACTION_STARTED, {
+        detail: { action: 'sync-challonge' },
+    }));
 
     try {
         const response = await fetch(config.apiCacheUpdateUrl, {
@@ -155,19 +154,18 @@ export async function syncFromChallonge() {
         }
 
         const data = await response.json();
-        renderDashboardAndResetSelection(data);
+        emitDashboardDataLoadedAndResetSelection(data);
         if (config.underwaySourceMode === 'cache') {
-            setStatusMessage('Synced from Challonge. Underway flags were preserved from server cache mode.', 'success');
+            emitStatus('Synced from Challonge. Underway flags were preserved from server cache mode.', 'success');
             return;
         }
-        setStatusMessage('Synced from Challonge successfully.', 'success');
+        emitStatus('Synced from Challonge successfully.', 'success');
     } catch (error) {
-        setStatusMessage(error.message, 'danger');
+        emitStatus(error.message, 'danger');
     } finally {
-        if (button) {
-            button.disabled = false;
-            button.innerHTML = '<i class="fas fa-cloud-download-alt me-1"></i> Sync from Challonge';
-        }
+        dashboardEvents.dispatchEvent(new CustomEvent(DASHBOARD_EVENT.ACTION_FINISHED, {
+            detail: { action: 'sync-challonge' },
+        }));
     }
 }
 
@@ -192,8 +190,8 @@ export async function setMatchUnderway(tournamentKey, matchId) {
     }
 
     const data = await response.json();
-    renderDashboardAndResetSelection(data);
-    setStatusMessage('Match marked as underway.', 'success');
+    emitDashboardDataLoadedAndResetSelection(data);
+    emitStatus('Match marked as underway.', 'success');
 }
 
 
@@ -217,6 +215,6 @@ export async function clearMatchUnderway(tournamentKey, matchId) {
     }
 
     const data = await response.json();
-    renderDashboardAndResetSelection(data);
-    setStatusMessage('Underway status cleared.', 'success');
+    emitDashboardDataLoadedAndResetSelection(data);
+    emitStatus('Underway status cleared.', 'success');
 }

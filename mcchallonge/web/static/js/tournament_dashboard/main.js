@@ -7,11 +7,64 @@ import { loadMatchSearchChips, renderMatchSearchChips, clearAllMatchSearchChips,
 import { loadMatchSearchMode, saveMatchSearchMode } from './search-mode.js';
 import { getById, setStatusMessage } from './helpers.js';
 import { loadLocalCache, updateLocalCache, clearLocalCache, syncFromChallonge, setMatchUnderway, clearMatchUnderway } from './api.js';
+import { renderDashboard } from './dashboard.js';
+import { dashboardEvents, DASHBOARD_EVENT } from './events.js';
 import { getFilteredMatches, getFilteredParticipants } from './filters.js';
 import { renderMatches, renderParticipantsTable } from './renderers.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     initializeConfig();
+
+    const actionButtons = {
+        'update-cache': {
+            id: 'refresh-cache-btn',
+            busyHtml: '<i class="fas fa-spinner fa-spin me-1"></i> Loading...',
+            idleHtml: '<i class="fas fa-sync-alt me-1"></i> Update Local Cache',
+        },
+        'sync-challonge': {
+            id: 'sync-challonge-btn',
+            busyHtml: '<i class="fas fa-spinner fa-spin me-1"></i> Syncing...',
+            idleHtml: '<i class="fas fa-cloud-download-alt me-1"></i> Sync from Challonge',
+        },
+    };
+
+    function setActionButtonBusy(action, isBusy) {
+        const meta = actionButtons[action];
+        if (!meta) return;
+        const button = getById(meta.id);
+        if (!button) return;
+        button.disabled = isBusy;
+        button.innerHTML = isBusy ? meta.busyHtml : meta.idleHtml;
+    }
+
+    dashboardEvents.addEventListener(DASHBOARD_EVENT.DATA_LOADED, (event) => {
+        const data = event?.detail?.data;
+        if (!data) return;
+        renderDashboard(data);
+    });
+
+    dashboardEvents.addEventListener(DASHBOARD_EVENT.DATA_CLEARED, () => {
+        const bracketFilters = getById('match-bracket-filters');
+        if (bracketFilters) bracketFilters.innerHTML = '';
+        const stateFilters = getById('match-state-filters');
+        if (stateFilters) stateFilters.innerHTML = '';
+        const tournFilters = getById('tournament-filters');
+        if (tournFilters) tournFilters.innerHTML = '';
+        const cacheMeta = getById('cache-meta');
+        if (cacheMeta) cacheMeta.textContent = 'Local cache has not been loaded yet.';
+    });
+
+    dashboardEvents.addEventListener(DASHBOARD_EVENT.STATUS, (event) => {
+        setStatusMessage(event?.detail?.message, event?.detail?.level || 'info');
+    });
+
+    dashboardEvents.addEventListener(DASHBOARD_EVENT.ACTION_STARTED, (event) => {
+        setActionButtonBusy(event?.detail?.action, true);
+    });
+
+    dashboardEvents.addEventListener(DASHBOARD_EVENT.ACTION_FINISHED, (event) => {
+        setActionButtonBusy(event?.detail?.action, false);
+    });
 
     // Queue view defaults to open matches only (Complete unchecked by default).
     if (config.showOnly === 'queue') {
