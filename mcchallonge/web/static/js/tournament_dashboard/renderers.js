@@ -2,39 +2,17 @@
  * Rendering functions for dashboard sections.
  */
 
-import { getById, escapeHtml } from './helpers.js';
+import { getById, escapeHtml, escapeAttribute } from './helpers.js';
 import { cachedData, activeTournamentIds, config } from './state.js';
 import { getAllTournamentEntries, getAllParticipantMap } from './data.js';
 import { getRoundMetadata, getBracketForMatch } from './round-metadata.js';
 import { getFilteredMatches, getFilteredParticipants } from './filters.js';
-
-function escapeAttribute(value) {
-    return String(value ?? '')
-        .replace(/&/g, '&amp;')
-        .replace(/"/g, '&quot;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-}
 
 function renderParticipantThumb(imgUrl, altText, extraClass = '') {
     if (!imgUrl) {
         return '<span class="bot-thumb bot-thumb-placeholder" aria-hidden="true"><i class="fas fa-robot"></i></span>';
     }
     return `<img class="bot-thumb ${extraClass}" src="${escapeAttribute(imgUrl)}" alt="${escapeAttribute(altText)}" loading="lazy">`;
-}
-
-export function setStatusMessage(message, level) {
-    const status = getById('status-message');
-    if (!status) return;
-    if (!message) {
-        status.style.display = 'none';
-        status.className = 'alert status-message';
-        status.textContent = '';
-        return;
-    }
-    status.style.display = 'block';
-    status.className = `alert status-message alert-${level}`;
-    status.textContent = message;
 }
 
 export function renderTournamentSection() {

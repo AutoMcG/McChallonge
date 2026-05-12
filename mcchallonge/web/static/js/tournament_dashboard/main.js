@@ -5,9 +5,8 @@
 import { initializeConfig, config, activeMatchSearchMode, setActiveMatchSearchMode, setActiveMatchStates } from './state.js';
 import { loadMatchSearchChips, renderMatchSearchChips, clearAllMatchSearchChips, addMatchSearchChip } from './search-chips.js';
 import { loadMatchSearchMode, saveMatchSearchMode } from './search-mode.js';
-import { getById } from './helpers.js';
+import { getById, setStatusMessage } from './helpers.js';
 import { loadLocalCache, updateLocalCache, clearLocalCache, syncFromChallonge, setMatchUnderway, clearMatchUnderway } from './api.js';
-import { setStatusMessage } from './renderers.js';
 import { getFilteredMatches, getFilteredParticipants } from './filters.js';
 import { renderMatches, renderParticipantsTable } from './renderers.js';
 
@@ -164,7 +163,7 @@ function initializeUnderwaySourceControl() {
         window.localStorage.setItem('mcchallonge-underway-source-mode', selectedMode);
 
         if (selectedMode === 'cache') {
-            setStatusMessage('Server cache override mode selected. Match-level underway override is not wired yet.', 'info');
+            setStatusMessage('Server cache mode selected. Sync will preserve current underway flags from cache.', 'info');
             return;
         }
         setStatusMessage('', 'info');

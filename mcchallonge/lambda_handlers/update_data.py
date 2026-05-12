@@ -58,9 +58,9 @@ def _fetch_tournament_payload(tournament_ids: list[str]) -> dict[str, Any]:
         match_items = challonging.get_match_data(session, tournament_id)
         enriched_participants = think.count_outcomes(match_items, participant_items)
 
-        tournaments[str(tournament_id)] = tournament.__dict__
-        participants[str(tournament_id)] = [item.__dict__ for item in enriched_participants]
-        matches[str(tournament_id)] = [item.__dict__ for item in match_items]
+        tournaments[str(tournament_id)] = tournament.to_cache_dict()
+        participants[str(tournament_id)] = [item.to_cache_dict() for item in enriched_participants]
+        matches[str(tournament_id)] = [item.to_cache_dict() for item in match_items]
         manifest[str(tournament_id)] = {
             "schema_version": "1.0.0",
             "generated_at": generated_at,

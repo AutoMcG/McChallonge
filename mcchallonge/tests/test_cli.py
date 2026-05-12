@@ -148,9 +148,9 @@ def test_static_generator_direct():
     """Test the static generator function directly without CLI"""
     with tempfile.TemporaryDirectory() as temp_dir:
         # Create objects from sample data
-        tournament = Tournament(**SAMPLE_TOURNAMENT)
-        participants = [Participant(**p) for p in SAMPLE_PARTICIPANTS]
-        matches = [Match(**m) for m in SAMPLE_MATCHES]
+        tournament = Tournament.from_dict(SAMPLE_TOURNAMENT)
+        participants = [Participant.from_dict(p) for p in SAMPLE_PARTICIPANTS]
+        matches = [Match.from_dict(m) for m in SAMPLE_MATCHES]
         
         output_file = os.path.join(temp_dir, "direct_dashboard.html")
         participants_page = os.path.join(temp_dir, "participants")
@@ -185,9 +185,9 @@ def test_cli_generate_dashboard_writes_json_artifacts(
 ):
     """Test that live-mode CLI generation writes JSON artifacts next to the dashboard."""
     mock_prepare_session.return_value = object()
-    mock_get_tournament_data.return_value = Tournament(**SAMPLE_TOURNAMENT)
-    mock_get_participants_data.return_value = [Participant(**participant) for participant in SAMPLE_PARTICIPANTS]
-    mock_get_match_data.return_value = [Match(**match) for match in SAMPLE_MATCHES]
+    mock_get_tournament_data.return_value = Tournament.from_dict(SAMPLE_TOURNAMENT)
+    mock_get_participants_data.return_value = [Participant.from_dict(participant) for participant in SAMPLE_PARTICIPANTS]
+    mock_get_match_data.return_value = [Match.from_dict(match) for match in SAMPLE_MATCHES]
 
     with tempfile.TemporaryDirectory() as temp_dir:
         output_file = os.path.join(temp_dir, "generated_dashboard.html")

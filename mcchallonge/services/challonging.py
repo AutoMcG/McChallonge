@@ -64,7 +64,7 @@ def get_tournaments(session: requests.Session) -> list[Tournament]:
     logger.info(f"Received response: {response.status_code} {response.reason}")
     
     response_data = response.json()
-    tournaments = [Tournament(**value["tournament"]) for value in response_data]
+    tournaments = [Tournament.from_dict(value["tournament"]) for value in response_data]
     
     logger.info(f"Retrieved {len(tournaments)} tournaments from Challonge API")
     return tournaments
@@ -82,7 +82,7 @@ def get_tournament_data(session: requests.Session, tournament_id_or_url: str) ->
     except (KeyError, ValueError) as e:
         logger.error(f"Failed to parse tournament data from API response: {e}")
         raise ValueError(f"Unexpected API response format") from e
-    return Tournament(**tournament_data)
+    return Tournament.from_dict(tournament_data)
 
 def get_participants_data(session: requests.Session, tournament_id_or_url: str) -> list[Participant]:
     URL = f'{CHALLONGE_API_V1}/tournaments/{tournament_id_or_url}/participants.json'
@@ -91,7 +91,7 @@ def get_participants_data(session: requests.Session, tournament_id_or_url: str) 
     response.raise_for_status()
     response_data = response.json()
     
-    pilots = [Participant(**value["participant"]) for value in response_data]
+    pilots = [Participant.from_dict(value["participant"]) for value in response_data]
     logger.info(f"Retrieved {len(pilots)} participants")
     return pilots
 
@@ -106,7 +106,7 @@ def get_match_data(
     response.raise_for_status()
     response_data = response.json()
     
-    matches = [Match(**value["match"]) for value in response_data]
+    matches = [Match.from_dict(value["match"]) for value in response_data]
     logger.info(f"Retrieved {len(matches)} matches")
 
     if states is not None:
