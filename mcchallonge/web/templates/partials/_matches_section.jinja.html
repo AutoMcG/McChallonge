@@ -6,6 +6,7 @@
         <span><i class="fas fa-gamepad me-2"></i> Matches</span>
         {% if is_client %}
         <div class="d-flex flex-wrap gap-3 align-items-center">
+            <div id="match-bracket-filters" class="d-flex flex-wrap gap-2 align-items-center"></div>
             <div id="match-state-filters" class="d-flex flex-wrap gap-2 align-items-center"></div>
             <div class="d-flex flex-column gap-1 flex-grow-1">
                 <div class="match-filter-controls">
@@ -43,12 +44,22 @@
                 <div class="players">
                     {% set player1 = get_participant_by_id(match.player1_id) %}
                     <div class="player {{ 'winner' if match.winner_id == match.player1_id }}">
-                        {{ player1.name if player1 else 'Player 1' }}
+                        {% if player1 and player1.img %}
+                        <img class="bot-thumb bot-thumb-sm" src="{{ player1.img }}" alt="{{ player1.name }}" loading="lazy">
+                        {% else %}
+                        <span class="bot-thumb bot-thumb-sm bot-thumb-placeholder" aria-hidden="true"><i class="fas fa-robot"></i></span>
+                        {% endif %}
+                        <span>{{ player1.name if player1 else 'Player 1' }}</span>
                     </div>
                     <div class="vs">VS</div>
                     {% set player2 = get_participant_by_id(match.player2_id) %}
                     <div class="player {{ 'winner' if match.winner_id == match.player2_id }}">
-                        {{ player2.name if player2 else 'Player 2' }}
+                        {% if player2 and player2.img %}
+                        <img class="bot-thumb bot-thumb-sm" src="{{ player2.img }}" alt="{{ player2.name }}" loading="lazy">
+                        {% else %}
+                        <span class="bot-thumb bot-thumb-sm bot-thumb-placeholder" aria-hidden="true"><i class="fas fa-robot"></i></span>
+                        {% endif %}
+                        <span>{{ player2.name if player2 else 'Player 2' }}</span>
                     </div>
                 </div>
                 <div class="match-info">

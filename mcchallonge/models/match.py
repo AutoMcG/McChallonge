@@ -15,9 +15,10 @@ class Match:
     underway_at: Optional[str] = None
     completed_at: Optional[str] = None
     round: Optional[int] = None
+    suggested_play_order: Optional[int] = None
 
     def __init__(self, id=None, state=None, player1_id=None, player2_id=None, winner_id=None, loser_id=None,
-                 scheduled_time=None, location=None, underway_at=None, completed_at=None, round=None, **kwargs):
+                 scheduled_time=None, location=None, underway_at=None, completed_at=None, round=None, suggested_play_order=None, **kwargs):
         self.id = id
         self.state = state
         self.player1_id = player1_id
@@ -29,6 +30,7 @@ class Match:
         self.underway_at = underway_at
         self.completed_at = completed_at
         self.round = round
+        self.suggested_play_order = suggested_play_order
         # kwargs are ignored
 
     @staticmethod

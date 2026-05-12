@@ -35,13 +35,14 @@
             apiCacheUrl: {{ url_for('cache_data') | tojson }},
             apiCacheUpdateUrl: {{ url_for('cache_data_update') | tojson }},
             apiCacheClearUrl: {{ url_for('cache_data_clear') | tojson }},
+            underwaySourceMode: {{ (underway_source_mode or 'challonge') | tojson }},
             clientDataMode: {{ (client_data_mode or 'api') | tojson }},
             clientDataRoot: {{ (client_data_root or '/data') | tojson }},
             showOnly: {{ (show_only or '') | tojson }},
             adminEnabled: {{ admin_enabled | default(false) | tojson }}
         };
     </script>
-    <script src="{{ asset_prefix }}static/js/tournament_dashboard_client.js"></script>
+    <script type="module" src="{{ asset_prefix }}static/js/tournament_dashboard/main.js"></script>
     {% endif %}
 </body>
 </html>

@@ -112,6 +112,9 @@ body {
     margin-right: 15px;
     flex: 1;
     background-color: var(--light-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .match .player.winner {
@@ -170,6 +173,35 @@ body {
     color: #7f8c8d;
 }
 
+.tournament-group {
+    border-radius: 10px;
+    padding: 8px;
+}
+
+.tournament-tone-0 {
+    background-color: #f0f8ff;
+}
+
+.tournament-tone-1 {
+    background-color: #f6fff4;
+}
+
+.tournament-tone-2 {
+    background-color: #fff9f0;
+}
+
+.tournament-tone-3 {
+    background-color: #f8f4ff;
+}
+
+.tournament-tone-4 {
+    background-color: #fff4f8;
+}
+
+.tournament-tone-5 {
+    background-color: #f4fbff;
+}
+
 .logo-container {
     position: absolute;
     right: 20px;
@@ -201,6 +233,28 @@ body {
     gap: 10px;
     align-items: center;
     flex-wrap: wrap;
+}
+
+.underway-source-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.underway-source-control label {
+    white-space: nowrap;
+}
+
+.underway-source-control .form-select {
+    min-width: 260px;
+    background-color: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+}
+
+.underway-source-control .form-select option {
+    color: #1f2937;
 }
 
 .cache-meta {
@@ -288,6 +342,36 @@ body {
 
 .match-filter-mode-group .form-check {
     margin-bottom: 0;
+}
+
+.bot-thumb {
+    width: 56px;
+    height: 56px;
+    border-radius: 6px;
+    object-fit: cover;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    background: #ffffff;
+    flex-shrink: 0;
+}
+
+.bot-thumb-sm {
+    width: 50px;
+    height: 50px;
+    border-radius: 5px;
+}
+
+.bot-thumb-placeholder {
+    color: #9aa4ad;
+    background: #f4f6f8;
+}
+
+.participant-name-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .match-filter-mode-group .form-check-label {

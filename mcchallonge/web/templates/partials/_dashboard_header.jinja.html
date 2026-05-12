@@ -7,7 +7,7 @@
     <h1 id="tournament-name">Tournament Dashboard</h1>
     <p id="tournament-id">Tournament ID: Not loaded</p>
     <div id="tournament-status" class="status status-underway">Unknown</div>
-    {{ render_client_controls() }}
+    {{ render_client_controls(admin_enabled) }}
     {% else %}
     <h1 id="tournament-name">{{ tournament.name if tournament else 'Tournament Dashboard' }}</h1>
     <p id="tournament-id">Tournament ID: {{ tournament.id if tournament else '' }}</p>
@@ -25,7 +25,7 @@
     {% if is_client %}
     <h1 id="tournament-name">Participants</h1>
     <p id="tournament-id">Tournament ID: Not loaded</p>
-    {{ render_client_controls() }}
+    {{ render_client_controls(admin_enabled) }}
     {% else %}
     <h1 id="tournament-name">{{ tournament.name }} - Participants</h1>
     <p id="tournament-id">Tournament ID: {{ tournament.id }}</p>
@@ -36,7 +36,7 @@
     {% if is_client %}
     <h1 id="tournament-name">Matches</h1>
     <p id="tournament-id">Tournament ID: Not loaded</p>
-    {{ render_client_controls() }}
+    {{ render_client_controls(admin_enabled) }}
     {% else %}
     <h1 id="tournament-name">{{ tournament.name }} - Matches</h1>
     <p id="tournament-id">Tournament ID: {{ tournament.id }}</p>

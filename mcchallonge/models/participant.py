@@ -8,12 +8,14 @@ class Participant:
     name: Optional[str] = None
     wins: int = 0
     losses: int = 0
+    img: Optional[str] = None
 
-    def __init__(self, id=None, name=None, wins=0, losses=0, **kwargs):
+    def __init__(self, id=None, name=None, wins=0, losses=0, img=None, **kwargs):
         self.id = id
         self.name = name
         self.wins = wins
         self.losses = losses
+        self.img = img
         # kwargs are ignored
 
     @staticmethod

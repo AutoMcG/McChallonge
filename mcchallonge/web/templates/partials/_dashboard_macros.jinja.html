@@ -12,8 +12,17 @@
 <p class="empty-state">{{ message }}</p>
 {%- endmacro %}
 
-{% macro render_client_controls() -%}
+{% macro render_client_controls(admin_enabled=false) -%}
 <div class="controls">
+    {% if admin_enabled %}
+    <div class="underway-source-control">
+        <label for="underway-source-mode" class="small mb-0">Underway source</label>
+        <select id="underway-source-mode" class="form-select form-select-sm">
+            <option value="challonge">Challonge API pull</option>
+            <option value="cache">Server cache override (coming soon)</option>
+        </select>
+    </div>
+    {% endif %}
     <button id="refresh-cache-btn" class="btn btn-light btn-sm" type="button">
         <i class="fas fa-sync-alt me-1"></i> Update Local Cache
     </button>

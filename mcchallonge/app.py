@@ -4,7 +4,7 @@ import time
 import sys
 import argparse
 import importlib
-from flask import Flask, render_template, jsonify, request, redirect, url_for, abort, has_request_context
+from flask import Flask, render_template, jsonify, request, redirect, url_for, abort, has_request_context, send_from_directory
 from flask_frozen import Freezer
 
 from mcchallonge import config
@@ -12,6 +12,16 @@ from mcchallonge.services.local_cache import (
     get_cache_file_path,
     load_cached_tournament_data,
     refresh_all_cached_tournaments,
+)
+from mcchallonge.services.underway_banners import (
+    generate_underway_banners,
+    get_underway_dir,
+    load_underway_manifest,
+)
+from mcchallonge.services.participant_images import (
+    get_image_cache_dir,
+    load_approved_participants_index,
+    prewarm_approved_participant_images,
 )
 
 # Set up logging
@@ -61,6 +71,11 @@ def _client_data_root() -> str:
     return root.rstrip('/') or '/data'
 
 
+def _underway_source_mode() -> str:
+    mode = (app.config.get('MCCHALLONGE_UNDERWAY_SOURCE_MODE') or 'challonge').strip().lower()
+    return mode if mode in {'challonge', 'cache'} else 'challonge'
+
+
 def _admin_enabled() -> bool:
     # Inside a request: only loopback visitors get admin controls.
     if has_request_context():
@@ -83,6 +98,7 @@ def tournament_page():
         title="Tournament Dashboard",
         current_date=time.strftime("%Y-%m-%d %H:%M"),
         client_rendered=True,
+        underway_source_mode=_underway_source_mode(),
         client_data_mode=_client_data_mode(),
         client_data_root=_client_data_root(),
         admin_enabled=_admin_enabled(),
@@ -97,6 +113,7 @@ def participants_page():
         title="Participants",
         current_date=time.strftime("%Y-%m-%d %H:%M"),
         client_rendered=True,
+        underway_source_mode=_underway_source_mode(),
         client_data_mode=_client_data_mode(),
         client_data_root=_client_data_root(),
         admin_enabled=_admin_enabled(),
@@ -112,12 +129,63 @@ def matches_page():
         title="Matches",
         current_date=time.strftime("%Y-%m-%d %H:%M"),
         client_rendered=True,
+        underway_source_mode=_underway_source_mode(),
         client_data_mode=_client_data_mode(),
         client_data_root=_client_data_root(),
         admin_enabled=_admin_enabled(),
         show_only="matches",  # Signal to template to only show matches section
         logo_url=_resolve_logo_url(),
     )
+
+
+@app.route('/underway')
+def underway_page():
+    """Render PNG banners for currently underway matches."""
+    manifest = _refresh_underway_from_cache()
+
+    return render_template(
+        'underway.jinja.html',
+        title="Underway Matches",
+        generated_at=manifest.get("generated_at"),
+        banners=manifest.get("banners") or [],
+    )
+
+
+def _refresh_underway_from_cache() -> dict:
+    """Generate underway manifest from local cache only (no Challonge API calls)."""
+    if _underway_source_mode() == 'cache':
+        existing = load_underway_manifest()
+        return existing or {"generated_at": None, "banners": []}
+
+    data = load_cached_tournament_data()
+    if data is None:
+        existing = load_underway_manifest()
+        return existing or {"generated_at": None, "banners": []}
+
+    try:
+        return generate_underway_banners(data)
+    except Exception:
+        logger.exception("Failed to generate underway banners from local cache")
+        existing = load_underway_manifest()
+        return existing or {"generated_at": None, "banners": []}
+
+
+@app.route('/api/underway', methods=['GET'])
+def underway_data():
+    """Refresh and return underway banners from local cache only."""
+    return jsonify(_refresh_underway_from_cache())
+
+
+@app.route('/underway/banner/<path:filename>')
+def underway_banner_file(filename: str):
+    """Serve generated underway banner PNGs."""
+    return send_from_directory(get_underway_dir(), filename)
+
+
+@app.route('/img/<path:filename>')
+def participant_image_file(filename: str):
+    """Serve cached participant images."""
+    return send_from_directory(get_image_cache_dir(), filename, max_age=86400)
 
 @app.route('/api/cache', methods=['GET'])
 def cache_data():
@@ -141,6 +209,9 @@ def cache_data_update():
     _require_loopback()
     body = request.get_json(silent=True) or {}
     requested_id = body.get('tournament_id')
+    requested_underway_mode = (body.get('underway_source_mode') or _underway_source_mode()).strip().lower()
+    underway_mode = requested_underway_mode if requested_underway_mode in {'challonge', 'cache'} else 'challonge'
+    app.config['MCCHALLONGE_UNDERWAY_SOURCE_MODE'] = underway_mode
 
     if requested_id:
         tournament_ids = [requested_id]
@@ -152,6 +223,13 @@ def cache_data_update():
 
     try:
         data = refresh_all_cached_tournaments(tournament_ids)
+        if underway_mode == 'challonge':
+            try:
+                generate_underway_banners(data)
+            except Exception:
+                logger.exception("Cache refresh succeeded, but underway banner generation failed")
+        else:
+            logger.info("Cache refresh succeeded; skipped underway banner regeneration due to server cache override mode")
         return jsonify(data)
     except Exception as exc:
         logger.exception("Failed to refresh local cache data")
@@ -173,6 +251,7 @@ def url_generator():
     yield '/index.html'
     yield '/participants'
     yield '/matches'
+    yield '/underway'
     # Freeze the cache JSON so the static build can serve tournament data.
     # Only yield when the cache file already exists so freeze() doesn't fail
     # with a 404 on machines that haven't populated the cache yet.
@@ -181,6 +260,7 @@ def url_generator():
 
 
 def _run_dev_server() -> None:
+    _initialize_participant_image_cache()
     logger.info("Starting development server...")
     app.run(debug=True)
 
@@ -208,11 +288,24 @@ def _run_waitress_server(port: int, threads: int) -> None:
 
     serve = getattr(waitress_module, "serve")
 
+    _initialize_participant_image_cache()
+
     # Bind on all interfaces so LAN clients can reach the app, and explicitly
     # on loopback so the admin can use 127.0.0.1 to access cache-update controls.
     listen = f"0.0.0.0:{port} 127.0.0.1:{port}"
     logger.info("Starting production WSGI server on %s (threads=%s)", listen, threads)
     serve(app, listen=listen, threads=threads)
+
+
+def _initialize_participant_image_cache() -> None:
+    """Preload approved participant images once per process startup."""
+    try:
+        index = load_approved_participants_index()
+        warmed = prewarm_approved_participant_images(index)
+        if warmed:
+            logger.info("Participant image cache warmup complete: %s image(s) available", warmed)
+    except Exception:
+        logger.exception("Participant image cache warmup failed")
 
 
 def _parse_args(argv: list[str]) -> argparse.Namespace:
