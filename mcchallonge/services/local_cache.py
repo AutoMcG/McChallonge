@@ -5,15 +5,20 @@ import time
 from pathlib import Path
 from typing import Any
 
+from mcchallonge import config
 from . import challonging, think
 from .participant_images import enrich_participants_with_cached_images, load_approved_participants_index
 
 logger = logging.getLogger(__name__)
 
 
+def _cache_missing_message() -> str:
+    return "Local cache file not found. Click 'Update Local Cache' to create it."
+
+
 def get_cache_file_path() -> Path:
     """Resolve the local cache file path for tournament data."""
-    configured_path = os.environ.get("MCCHALLONGE_CACHE_FILE", "build/tournament_cache.json")
+    configured_path = os.environ.get("MCCHALLONGE_CACHE_FILE", config.DEFAULT_CACHE_FILE)
     return Path(configured_path).expanduser().resolve()
 
 
@@ -60,7 +65,7 @@ def refresh_cached_tournament_data(
         "participants": [p.to_cache_dict() for p in updated_participants],
         "matches": [m.to_cache_dict() for m in matches],
         "meta": {
-            "cached_at": time.strftime("%Y-%m-%d %H:%M"),
+            "cached_at": time.strftime(config.CACHE_METADATA_TIMESTAMP_FORMAT),
             "tournament_id": tournament_id,
             "cache_file": str(get_cache_file_path()),
         },
@@ -104,10 +109,13 @@ def _save_cache_data(data: dict[str, Any]) -> None:
 
 
 def set_match_underway_in_cache(tournament_key: str, match_id: str | int) -> dict[str, Any]:
-    """Mark one cached match as underway and clear underway on all other matches."""
+    """Mark one cached match as underway and clear underway on all cached matches.
+
+    This enforces an exclusive underway state globally across all tournaments.
+    """
     data = load_cached_tournament_data()
     if data is None:
-        raise ValueError("Local cache file not found.")
+        raise ValueError(_cache_missing_message())
 
     tournaments = data.get("tournaments") or {}
     entry = tournaments.get(str(tournament_key))
@@ -133,7 +141,7 @@ def set_match_underway_in_cache(tournament_key: str, match_id: str | int) -> dic
             match["underway_at"] = None
 
     target["state"] = "open"
-    target["underway_at"] = time.strftime("%Y-%m-%dT%H:%M:%S")
+    target["underway_at"] = time.strftime(config.UNDERWAY_TIMESTAMP_FORMAT)
 
     _save_cache_data(data)
 
@@ -150,7 +158,7 @@ def clear_match_underway_in_cache(tournament_key: str, match_id: str | int) -> d
     """Clear underway status from one cached match and persist the cache file."""
     data = load_cached_tournament_data()
     if data is None:
-        raise ValueError("Local cache file not found.")
+        raise ValueError(_cache_missing_message())
 
     tournaments = data.get("tournaments") or {}
     entry = tournaments.get(str(tournament_key))

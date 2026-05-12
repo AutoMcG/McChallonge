@@ -5,9 +5,11 @@ import time
 from pathlib import Path
 from typing import Any
 
+from mcchallonge import config
+
 
 def get_underway_dir() -> Path:
-    configured_path = os.environ.get("MCCHALLONGE_UNDERWAY_DIR", "build/underway")
+    configured_path = os.environ.get("MCCHALLONGE_UNDERWAY_DIR", config.DEFAULT_UNDERWAY_DIR)
     return Path(configured_path).expanduser().resolve()
 
 
@@ -220,7 +222,7 @@ def generate_underway_banners(cache_data: dict[str, Any]) -> dict[str, Any]:
         )
 
     manifest = {
-        "generated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "generated_at": time.strftime(config.UNDERWAY_MANIFEST_TIMESTAMP_FORMAT),
         "count": len(banners),
         "banners": banners,
     }

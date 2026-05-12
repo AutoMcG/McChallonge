@@ -16,6 +16,20 @@ CHALLONGE_TOURNAMENT_ID: str | None = CHALLONGE_TOURNAMENT_IDS[0] if CHALLONGE_T
 # Output settings
 BUILD_DIR = os.environ.get('BUILD_DIR', 'build')
 
+# Shared artifact path defaults
+DEFAULT_CACHE_FILE = os.environ.get('MCCHALLONGE_CACHE_FILE', f'{BUILD_DIR}/tournament_cache.json')
+DEFAULT_UNDERWAY_DIR = os.environ.get('MCCHALLONGE_UNDERWAY_DIR', f'{BUILD_DIR}/underway')
+DEFAULT_APPROVED_PARTICIPANTS_FILE = os.environ.get(
+	'MCCHALLONGE_APPROVED_PARTICIPANTS_FILE',
+	f'{BUILD_DIR}/approved_participants.json',
+)
+DEFAULT_IMAGE_CACHE_DIR = os.environ.get('MCCHALLONGE_IMAGE_CACHE_DIR', f'{BUILD_DIR}/img')
+
+# Shared timestamp formatting defaults
+CACHE_METADATA_TIMESTAMP_FORMAT = '%Y-%m-%d %H:%M'
+UNDERWAY_TIMESTAMP_FORMAT = '%Y-%m-%dT%H:%M:%S'
+UNDERWAY_MANIFEST_TIMESTAMP_FORMAT = '%Y-%m-%d %H:%M:%S'
+
 # Optional logo for dashboard header. Supports absolute URL or path under static/.
 # Examples:
 # - MCCHALLONGE_LOGO_URL=https://example.com/logo.png
