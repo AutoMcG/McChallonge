@@ -72,6 +72,25 @@ def test_mark_match_underway_success(client, monkeypatch):
     assert response.get_json() == data
 
 
+def test_mark_match_underway_returns_actionable_missing_cache_message(client, monkeypatch):
+    monkeypatch.setattr(
+        app_module,
+        'set_match_underway_in_cache',
+        lambda tournament_key, match_id: (_ for _ in ()).throw(
+            ValueError("Local cache file not found. Click 'Update Local Cache' to create it.")
+        ),
+    )
+
+    response = client.post(
+        '/api/cache/match/underway',
+        json={'tournament_key': 'abc', 'match_id': '1'},
+        environ_overrides={'REMOTE_ADDR': '127.0.0.1'},
+    )
+
+    assert response.status_code == 400
+    assert "Update Local Cache" in response.get_json().get('error', '')
+
+
 def test_clear_match_underway_requires_loopback(client):
     response = client.post(
         '/api/cache/match/underway/clear',

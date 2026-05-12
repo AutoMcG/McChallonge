@@ -8,6 +8,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import requests
+from mcchallonge import config
 
 logger = logging.getLogger(__name__)
 
@@ -17,12 +18,15 @@ _PIL_UNAVAILABLE_LOGGED = False
 
 
 def get_approved_participants_file_path() -> Path:
-    configured = os.environ.get("MCCHALLONGE_APPROVED_PARTICIPANTS_FILE", "build/approved_participants.json")
+    configured = os.environ.get(
+        "MCCHALLONGE_APPROVED_PARTICIPANTS_FILE",
+        config.DEFAULT_APPROVED_PARTICIPANTS_FILE,
+    )
     return Path(configured).expanduser().resolve()
 
 
 def get_image_cache_dir() -> Path:
-    configured = os.environ.get("MCCHALLONGE_IMAGE_CACHE_DIR", "build/img")
+    configured = os.environ.get("MCCHALLONGE_IMAGE_CACHE_DIR", config.DEFAULT_IMAGE_CACHE_DIR)
     return Path(configured).expanduser().resolve()
 
 

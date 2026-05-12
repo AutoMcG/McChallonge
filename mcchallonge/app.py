@@ -45,7 +45,7 @@ app = Flask(__name__,
 app.config.from_object('mcchallonge.config')
 app.config['TOURNAMENT_IDS'] = config.CHALLONGE_TOURNAMENT_IDS
 app.config['FREEZER_RELATIVE_URLS'] = True  # Use relative URLs for links
-freezer = Freezer(app, with_static_files=True, with_no_argument_rules=True)
+freezer = Freezer(app, with_static_files=True, with_no_argument_rules=False)
 
 
 def _resolve_logo_url() -> str | None:
@@ -175,6 +175,14 @@ def _refresh_underway_from_cache() -> dict:
         return existing or {"generated_at": None, "banners": []}
 
 
+def _try_regenerate_underway_banners(data: dict, failure_message: str) -> None:
+    """Best-effort banner regeneration for cache mutation flows."""
+    try:
+        generate_underway_banners(data)
+    except Exception:
+        logger.exception(failure_message)
+
+
 @app.route('/api/underway', methods=['GET'])
 def underway_data():
     """Refresh and return underway banners from local cache only."""
@@ -228,10 +236,10 @@ def cache_data_update():
     try:
         data = refresh_all_cached_tournaments(tournament_ids)
         if underway_mode == 'challonge':
-            try:
-                generate_underway_banners(data)
-            except Exception:
-                logger.exception("Cache refresh succeeded, but underway banner generation failed")
+            _try_regenerate_underway_banners(
+                data,
+                "Cache refresh succeeded, but underway banner generation failed",
+            )
         else:
             logger.info("Cache refresh succeeded; skipped underway banner regeneration due to server cache override mode")
         return jsonify(data)
@@ -262,10 +270,10 @@ def cache_mark_match_underway():
 
     try:
         data = set_match_underway_in_cache(tournament_key, match_id)
-        try:
-            generate_underway_banners(data)
-        except Exception:
-            logger.exception("Match was marked underway but banner regeneration failed")
+        _try_regenerate_underway_banners(
+            data,
+            "Match was marked underway but banner regeneration failed",
+        )
         return jsonify(data)
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
@@ -287,10 +295,10 @@ def cache_clear_match_underway():
 
     try:
         data = clear_match_underway_in_cache(tournament_key, match_id)
-        try:
-            generate_underway_banners(data)
-        except Exception:
-            logger.exception("Match underway status was cleared but banner regeneration failed")
+        _try_regenerate_underway_banners(
+            data,
+            "Match underway status was cleared but banner regeneration failed",
+        )
         return jsonify(data)
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
@@ -307,6 +315,7 @@ def url_generator():
     yield '/matches'
     yield '/queue'
     yield '/underway'
+    yield '/api/underway'
     # Freeze the cache JSON so the static build can serve tournament data.
     # Only yield when the cache file already exists so freeze() doesn't fail
     # with a 404 on machines that haven't populated the cache yet.

@@ -3,6 +3,8 @@ from datetime import datetime
 from flask import render_template
 from jinja2 import Environment, FileSystemLoader
 
+from mcchallonge import config
+
 def render_tournament_dashboard(
     tournament,
     participants,
@@ -42,7 +44,7 @@ def render_tournament_dashboard(
     )
     
     # Format dates for better display
-    current_date = datetime.now().strftime("%Y-%m-%d %H:%M")
+    current_date = datetime.now().strftime(config.CACHE_METADATA_TIMESTAMP_FORMAT)
 
     # Prepare template data
     template_data = {
