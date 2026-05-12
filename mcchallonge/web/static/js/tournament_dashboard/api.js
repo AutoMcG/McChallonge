@@ -5,8 +5,7 @@
 import { config } from './state.js';
 import { setCachedData, setActiveTournamentIds } from './state.js';
 import { renderDashboard } from './dashboard.js';
-import { setStatusMessage } from './renderers.js';
-import { getById } from './helpers.js';
+import { getById, setStatusMessage } from './helpers.js';
 
 const FIXED_TOURNAMENT_URL = '/data/tournament.json';
 const FIXED_PARTICIPANTS_URL = '/data/participants.json';
@@ -58,6 +57,11 @@ function composeCachePayloadFromFixedFiles(tournamentPayload, participantsPayloa
     return { tournaments: merged };
 }
 
+function renderDashboardAndResetSelection(data) {
+    setActiveTournamentIds(null);
+    renderDashboard(data);
+}
+
 export async function loadLocalCache() {
     try {
         if (config.clientDataMode === 'fixed') {
@@ -103,7 +107,7 @@ export async function updateLocalCache() {
             throw new Error(`Failed to load cache: ${response.statusText}`);
         }
         const data = await response.json();
-        renderDashboard(data);
+        renderDashboardAndResetSelection(data);
         setStatusMessage('', 'info');
     } catch (error) {
         setStatusMessage(error.message, 'danger');
@@ -151,10 +155,9 @@ export async function syncFromChallonge() {
         }
 
         const data = await response.json();
-        setActiveTournamentIds(null);
-        renderDashboard(data);
+        renderDashboardAndResetSelection(data);
         if (config.underwaySourceMode === 'cache') {
-            setStatusMessage('Synced from Challonge. Underway banners were left unchanged (Server cache override mode).', 'success');
+            setStatusMessage('Synced from Challonge. Underway flags were preserved from server cache mode.', 'success');
             return;
         }
         setStatusMessage('Synced from Challonge successfully.', 'success');
@@ -189,8 +192,7 @@ export async function setMatchUnderway(tournamentKey, matchId) {
     }
 
     const data = await response.json();
-    setActiveTournamentIds(null);
-    renderDashboard(data);
+    renderDashboardAndResetSelection(data);
     setStatusMessage('Match marked as underway.', 'success');
 }
 
@@ -215,7 +217,6 @@ export async function clearMatchUnderway(tournamentKey, matchId) {
     }
 
     const data = await response.json();
-    setActiveTournamentIds(null);
-    renderDashboard(data);
+    renderDashboardAndResetSelection(data);
     setStatusMessage('Underway status cleared.', 'success');
 }

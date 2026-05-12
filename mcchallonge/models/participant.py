@@ -1,8 +1,12 @@
-from dataclasses import dataclass
 from typing import Optional
 import json
 
-@dataclass
+from dataclasses import asdict, dataclass, fields
+import json
+from typing import Any, Optional
+
+
+@dataclass(slots=True)
 class Participant:
     id: Optional[int] = None
     name: Optional[str] = None
@@ -10,23 +14,23 @@ class Participant:
     losses: int = 0
     img: Optional[str] = None
 
-    def __init__(self, id=None, name=None, wins=0, losses=0, img=None, **kwargs):
-        self.id = id
-        self.name = name
-        self.wins = wins
-        self.losses = losses
-        self.img = img
-        # kwargs are ignored
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]):
+        allowed = {f.name for f in fields(cls)}
+        filtered = {key: value for key, value in dict(data).items() if key in allowed}
+        if filtered.get("wins") is None:
+            filtered["wins"] = 0
+        if filtered.get("losses") is None:
+            filtered["losses"] = 0
+        return cls(**filtered)
 
     @staticmethod
     def from_json(j: str):
         data = json.loads(j) if isinstance(j, str) else j
-        data = dict(data)
-        # Coerce missing numeric fields to 0 rather than leaving them as None
-        for k in ["wins", "losses"]:
-            if data.get(k) is None:
-                data[k] = 0
-        return Participant(**data)
+        return Participant.from_dict(data)
+
+    def to_cache_dict(self) -> dict[str, Any]:
+        return {key: value for key, value in asdict(self).items() if value is not None}
 
     def __str__(self):
-        return json.dumps(self.__dict__, indent=2)
+        return json.dumps(self.to_cache_dict(), indent=2)

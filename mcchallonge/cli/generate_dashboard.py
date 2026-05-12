@@ -18,9 +18,9 @@ def write_json_outputs(output_file, tournament, participants, matches):
     os.makedirs(output_dir, exist_ok=True)
 
     artifacts = {
-        "tournament.json": tournament.__dict__,
-        "participants.json": [participant.__dict__ for participant in participants],
-        "matches.json": [match.__dict__ for match in matches],
+        "tournament.json": tournament.to_cache_dict(),
+        "participants.json": [participant.to_cache_dict() for participant in participants],
+        "matches.json": [match.to_cache_dict() for match in matches],
     }
 
     for file_name, payload in artifacts.items():
@@ -116,19 +116,19 @@ def main():
             tournament_data = json.load(f)
             if "tournament" in tournament_data:
                 tournament_data = tournament_data["tournament"]
-            tournament = Tournament(**tournament_data)
+            tournament = Tournament.from_dict(tournament_data)
         
         with open(args.participants_file, 'r', encoding='utf-8') as f:
             participants_data = json.load(f)
             if all("participant" in item for item in participants_data):
                 participants_data = [item["participant"] for item in participants_data]
-            participants = [Participant(**p) for p in participants_data]
+            participants = [Participant.from_dict(p) for p in participants_data]
         
         with open(args.matches_file, 'r', encoding='utf-8') as f:
             matches_data = json.load(f)
             if all("match" in item for item in matches_data):
                 matches_data = [item["match"] for item in matches_data]
-            matches = [Match(**m) for m in matches_data]
+            matches = [Match.from_dict(m) for m in matches_data]
     else:
         # Get session
         if args.user and args.key:

@@ -55,7 +55,3 @@ export function setActiveMatchSearchMode(mode) {
 export function setActiveTournamentIds(ids) {
     activeTournamentIds = ids;
 }
-
-export function setActiveBrackets(brackets) {
-    activeBrackets = brackets;
-}

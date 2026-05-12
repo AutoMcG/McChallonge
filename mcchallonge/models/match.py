@@ -1,8 +1,12 @@
-from dataclasses import dataclass
 from typing import Optional
 import json
 
-@dataclass
+from dataclasses import asdict, dataclass, fields
+import json
+from typing import Any, Optional
+
+
+@dataclass(slots=True)
 class Match:
     id: Optional[int] = None
     state: Optional[str] = None
@@ -17,26 +21,18 @@ class Match:
     round: Optional[int] = None
     suggested_play_order: Optional[int] = None
 
-    def __init__(self, id=None, state=None, player1_id=None, player2_id=None, winner_id=None, loser_id=None,
-                 scheduled_time=None, location=None, underway_at=None, completed_at=None, round=None, suggested_play_order=None, **kwargs):
-        self.id = id
-        self.state = state
-        self.player1_id = player1_id
-        self.player2_id = player2_id
-        self.winner_id = winner_id
-        self.loser_id = loser_id
-        self.scheduled_time = scheduled_time
-        self.location = location
-        self.underway_at = underway_at
-        self.completed_at = completed_at
-        self.round = round
-        self.suggested_play_order = suggested_play_order
-        # kwargs are ignored
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]):
+        allowed = {f.name for f in fields(cls)}
+        return cls(**{key: value for key, value in dict(data).items() if key in allowed})
 
     @staticmethod
     def from_json(j: str):
         data = json.loads(j) if isinstance(j, str) else j
-        return Match(**data)
+        return Match.from_dict(data)
+
+    def to_cache_dict(self) -> dict[str, Any]:
+        return {key: value for key, value in asdict(self).items() if value is not None}
 
     def __str__(self):
-        return json.dumps(self.__dict__, indent=2)
+        return json.dumps(self.to_cache_dict(), indent=2)

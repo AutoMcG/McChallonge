@@ -56,9 +56,9 @@ def refresh_cached_tournament_data(
     )
 
     entry: dict[str, Any] = {
-        "tournament": tournament.__dict__,
-        "participants": [p.__dict__ for p in updated_participants],
-        "matches": [m.__dict__ for m in matches],
+        "tournament": tournament.to_cache_dict(),
+        "participants": [p.to_cache_dict() for p in updated_participants],
+        "matches": [m.to_cache_dict() for m in matches],
         "meta": {
             "cached_at": time.strftime("%Y-%m-%d %H:%M"),
             "tournament_id": tournament_id,

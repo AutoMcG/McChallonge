@@ -25,44 +25,26 @@ def generate_static_tournament_page(tournament, participants, matches, output_fi
         custom_content: Optional HTML to include in the page
         logo_url: Optional URL for tournament logo
     """
-    html_content = render_tournament_dashboard(
-        tournament,
-        participants,
-        matches,
-        custom_content,
-        logo_url,
-        path_prefix="./",
-    )
-
     output_dir = os.path.dirname(output_file)
-    if output_dir:
-        os.makedirs(output_dir, exist_ok=True)
+    page_specs = [
+        (None, output_file),
+        ('participants', os.path.join(output_dir, 'participants') if output_dir else 'participants'),
+        ('matches', os.path.join(output_dir, 'matches') if output_dir else 'matches'),
+    ]
 
-    _write_dashboard_file(output_file, html_content)
-
-    participants_output_file = os.path.join(output_dir, 'participants') if output_dir else 'participants'
-    participants_html = render_tournament_dashboard(
-        tournament,
-        participants,
-        matches,
-        custom_content,
-        logo_url,
-        show_only='participants',
-        path_prefix='./',
-    )
-    _write_dashboard_file(participants_output_file, participants_html)
-
-    matches_output_file = os.path.join(output_dir, 'matches') if output_dir else 'matches'
-    matches_html = render_tournament_dashboard(
-        tournament,
-        participants,
-        matches,
-        custom_content,
-        logo_url,
-        show_only='matches',
-        path_prefix='./',
-    )
-    _write_dashboard_file(matches_output_file, matches_html)
+    generated_outputs = []
+    for show_only, destination in page_specs:
+        html_content = render_tournament_dashboard(
+            tournament,
+            participants,
+            matches,
+            custom_content,
+            logo_url,
+            show_only=show_only,
+            path_prefix='./',
+        )
+        _write_dashboard_file(destination, html_content)
+        generated_outputs.append(destination)
     
     # Copy static files
     package_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -88,7 +70,7 @@ def generate_static_tournament_page(tournament, participants, matches, output_fi
                 if os.path.isfile(src_file):
                     shutil.copy2(src_file, dest_file)
     
-    print(f"Tournament page generated: {output_file}")
-    print(f"Participants page generated: {participants_output_file}")
-    print(f"Matches page generated: {matches_output_file}")
+    print(f"Tournament page generated: {generated_outputs[0]}")
+    print(f"Participants page generated: {generated_outputs[1]}")
+    print(f"Matches page generated: {generated_outputs[2]}")
     print(f"Static files copied to: {static_dest_dir}")

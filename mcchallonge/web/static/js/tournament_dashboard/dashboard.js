@@ -16,7 +16,7 @@ export function renderDashboard(data) {
     const allMatches = getAllMatches();
     renderTournamentSection();
     buildTournamentFilters();
-    buildBracketFilters(allMatches);
+    buildBracketFilters();
     buildMatchStateFilters(allMatches);
     renderParticipantsTable(getFilteredParticipants());
     renderMatches(getFilteredMatches());

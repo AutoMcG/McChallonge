@@ -78,14 +78,33 @@ def _underway_source_mode() -> str:
     return mode if mode in {'challonge', 'cache'} else 'challonge'
 
 
+def _is_loopback_addr(addr: str | None) -> bool:
+    value = addr or ''
+    return value == '127.0.0.1' or value == '::1' or value.startswith('127.')
+
+
 def _admin_enabled() -> bool:
     # Inside a request: only loopback visitors get admin controls.
     if has_request_context():
-        addr = request.remote_addr or ''
-        return addr == '127.0.0.1' or addr == '::1' or addr.startswith('127.')
+        return _is_loopback_addr(request.remote_addr)
     # Outside a request context (e.g. static build): read config flag.
     val = app.config.get('MCCHALLONGE_ADMIN_ENABLED')
     return val if isinstance(val, bool) else True
+
+
+def _render_client_dashboard(title: str, show_only: str | None = None):
+    return render_template(
+        'tournament_dashboard.jinja.html',
+        title=title,
+        current_date=time.strftime("%Y-%m-%d %H:%M"),
+        client_rendered=True,
+        underway_source_mode=_underway_source_mode(),
+        client_data_mode=_client_data_mode(),
+        client_data_root=_client_data_root(),
+        admin_enabled=_admin_enabled(),
+        show_only=show_only,
+        logo_url=_resolve_logo_url(),
+    )
 
 @app.route('/')
 def root_page():
@@ -95,49 +114,17 @@ def root_page():
 @app.route('/index.html')
 def tournament_page():
     """Render the main tournament page shell. Data is loaded client-side from local cache."""
-    return render_template(
-        'tournament_dashboard.jinja.html',
-        title="Tournament Dashboard",
-        current_date=time.strftime("%Y-%m-%d %H:%M"),
-        client_rendered=True,
-        underway_source_mode=_underway_source_mode(),
-        client_data_mode=_client_data_mode(),
-        client_data_root=_client_data_root(),
-        admin_enabled=_admin_enabled(),
-        logo_url=_resolve_logo_url(),
-    )
+    return _render_client_dashboard("Tournament Dashboard")
 
 @app.route('/participants')
 def participants_page():
     """Render just the participants list shell. Data is loaded client-side from local cache."""
-    return render_template(
-        'tournament_dashboard.jinja.html',
-        title="Participants",
-        current_date=time.strftime("%Y-%m-%d %H:%M"),
-        client_rendered=True,
-        underway_source_mode=_underway_source_mode(),
-        client_data_mode=_client_data_mode(),
-        client_data_root=_client_data_root(),
-        admin_enabled=_admin_enabled(),
-        show_only="participants",  # Signal to template to only show participants section
-        logo_url=_resolve_logo_url(),
-    )
+    return _render_client_dashboard("Participants", show_only="participants")
 
 @app.route('/matches')
 def matches_page():
     """Render the matches list shell. Data is loaded client-side from local cache."""
-    return render_template(
-        'tournament_dashboard.jinja.html',
-        title="Matches",
-        current_date=time.strftime("%Y-%m-%d %H:%M"),
-        client_rendered=True,
-        underway_source_mode=_underway_source_mode(),
-        client_data_mode=_client_data_mode(),
-        client_data_root=_client_data_root(),
-        admin_enabled=_admin_enabled(),
-        show_only="matches",  # Signal to template to only show matches section
-        logo_url=_resolve_logo_url(),
-    )
+    return _render_client_dashboard("Matches", show_only="matches")
 
 
 @app.route('/queue')
@@ -216,8 +203,7 @@ def cache_data():
 
 def _require_loopback():
     """Abort with 403 if the request did not originate from loopback."""
-    addr = request.remote_addr
-    if addr not in ('127.0.0.1', '::1') and not (addr or '').startswith('127.'):
+    if not _is_loopback_addr(request.remote_addr):
         abort(403)
 
 
@@ -319,6 +305,7 @@ def url_generator():
     yield '/index.html'
     yield '/participants'
     yield '/matches'
+    yield '/queue'
     yield '/underway'
     # Freeze the cache JSON so the static build can serve tournament data.
     # Only yield when the cache file already exists so freeze() doesn't fail
