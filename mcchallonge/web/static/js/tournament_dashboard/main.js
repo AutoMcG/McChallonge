@@ -2,16 +2,22 @@
  * Main initialization and event listeners.
  */
 
-import { initializeConfig, config, activeMatchSearchMode, setActiveMatchSearchMode } from './state.js';
+import { initializeConfig, config, activeMatchSearchMode, setActiveMatchSearchMode, setActiveMatchStates } from './state.js';
 import { loadMatchSearchChips, renderMatchSearchChips, clearAllMatchSearchChips, addMatchSearchChip } from './search-chips.js';
 import { loadMatchSearchMode, saveMatchSearchMode } from './search-mode.js';
 import { getById } from './helpers.js';
-import { loadLocalCache, updateLocalCache, clearLocalCache, syncFromChallonge } from './api.js';
+import { loadLocalCache, updateLocalCache, clearLocalCache, syncFromChallonge, setMatchUnderway, clearMatchUnderway } from './api.js';
+import { setStatusMessage } from './renderers.js';
 import { getFilteredMatches, getFilteredParticipants } from './filters.js';
 import { renderMatches, renderParticipantsTable } from './renderers.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     initializeConfig();
+
+    // Queue view defaults to open matches only (Complete unchecked by default).
+    if (config.showOnly === 'queue') {
+        setActiveMatchStates(new Set(['open']));
+    }
 
     initializeUnderwaySourceControl();
     
@@ -102,6 +108,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (matchFilterClearAllButton) {
         matchFilterClearAllButton.addEventListener('click', clearAllMatchSearchChips);
+    }
+
+    const matchesContainer = getById('matches-container');
+    if (matchesContainer) {
+        matchesContainer.addEventListener('click', async (event) => {
+            const button = event.target.closest('.match-underway-btn, .match-clear-underway-btn');
+            if (!button) return;
+
+            const tournamentKey = button.dataset.tournamentKey;
+            const matchId = button.dataset.matchId;
+            if (!tournamentKey || !matchId) {
+                setStatusMessage('Unable to mark match underway: missing identifiers.', 'warning');
+                return;
+            }
+
+            button.disabled = true;
+            const original = button.innerHTML;
+            const isClearAction = button.classList.contains('match-clear-underway-btn');
+            button.innerHTML = isClearAction
+                ? '<i class="fas fa-spinner fa-spin me-1"></i>Clearing...'
+                : '<i class="fas fa-spinner fa-spin me-1"></i>Setting...';
+            try {
+                if (isClearAction) {
+                    await clearMatchUnderway(tournamentKey, matchId);
+                } else {
+                    await setMatchUnderway(tournamentKey, matchId);
+                }
+            } catch (error) {
+                setStatusMessage(error.message || 'Failed to update underway status.', 'danger');
+            } finally {
+                button.disabled = false;
+                button.innerHTML = original;
+            }
+        });
     }
 
     loadLocalCache();

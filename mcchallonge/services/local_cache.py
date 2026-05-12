@@ -95,3 +95,84 @@ def refresh_all_cached_tournaments(tournament_ids: list[str]) -> dict[str, Any]:
         result = refresh_cached_tournament_data(tournament_id, approved_images_index)
     return result
 
+
+def _save_cache_data(data: dict[str, Any]) -> None:
+    cache_path = get_cache_file_path()
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    with cache_path.open("w", encoding="utf-8") as cache_file:
+        json.dump(data, cache_file, indent=2)
+
+
+def set_match_underway_in_cache(tournament_key: str, match_id: str | int) -> dict[str, Any]:
+    """Mark one cached match as underway and clear underway on all other matches."""
+    data = load_cached_tournament_data()
+    if data is None:
+        raise ValueError("Local cache file not found.")
+
+    tournaments = data.get("tournaments") or {}
+    entry = tournaments.get(str(tournament_key))
+    if not entry:
+        raise ValueError(f"Tournament '{tournament_key}' was not found in local cache.")
+
+    matches = entry.get("matches") or []
+    target = None
+    for match in matches:
+        if str(match.get("id")) == str(match_id):
+            target = match
+            break
+
+    if target is None:
+        raise ValueError(f"Match '{match_id}' was not found in tournament '{tournament_key}'.")
+
+    state = str(target.get("state") or "").strip().lower()
+    if state == "complete":
+        raise ValueError("Completed matches cannot be marked as underway.")
+
+    for tournament_entry in tournaments.values():
+        for match in (tournament_entry.get("matches") or []):
+            match["underway_at"] = None
+
+    target["state"] = "open"
+    target["underway_at"] = time.strftime("%Y-%m-%dT%H:%M:%S")
+
+    _save_cache_data(data)
+
+    logger.info(
+        "Marked match %s in tournament %s as underway in %s",
+        match_id,
+        tournament_key,
+        get_cache_file_path(),
+    )
+    return data
+
+
+def clear_match_underway_in_cache(tournament_key: str, match_id: str | int) -> dict[str, Any]:
+    """Clear underway status from one cached match and persist the cache file."""
+    data = load_cached_tournament_data()
+    if data is None:
+        raise ValueError("Local cache file not found.")
+
+    tournaments = data.get("tournaments") or {}
+    entry = tournaments.get(str(tournament_key))
+    if not entry:
+        raise ValueError(f"Tournament '{tournament_key}' was not found in local cache.")
+
+    matches = entry.get("matches") or []
+    target = None
+    for match in matches:
+        if str(match.get("id")) == str(match_id):
+            target = match
+            break
+
+    if target is None:
+        raise ValueError(f"Match '{match_id}' was not found in tournament '{tournament_key}'.")
+
+    target["underway_at"] = None
+    _save_cache_data(data)
+    logger.info(
+        "Cleared underway on match %s in tournament %s",
+        match_id,
+        tournament_key,
+    )
+    return data
+

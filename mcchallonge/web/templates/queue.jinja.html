@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% set asset_prefix = path_prefix|default('./') %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="{{ asset_prefix }}static/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="{{ asset_prefix }}static/css/all.min.css">
+
+    <link rel="stylesheet" href="{{ asset_prefix }}static/css/tournament_dashboard.css">
+</head>
+<body>
+    {% set is_client = client_rendered|default(false) %}
+    <div class="container">
+        {% if is_client %}
+        <div id="status-message" class="alert status-message" role="alert"></div>
+        {% endif %}
+
+        {% include "partials/_dashboard_header.jinja.html" %}
+        {% include "partials/_matches_section.jinja.html" %}
+        {% include "partials/_dashboard_footer.jinja.html" %}
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="{{ asset_prefix }}static/js/bootstrap.bundle.min.js"></script>
+    {% if is_client %}
+    <script>
+        window.__MCC_DASHBOARD_CONFIG = {
+            apiCacheUrl: {{ url_for('cache_data') | tojson }},
+            apiCacheUpdateUrl: {{ url_for('cache_data_update') | tojson }},
+            apiCacheClearUrl: {{ url_for('cache_data_clear') | tojson }},
+            underwaySourceMode: {{ (underway_source_mode or 'challonge') | tojson }},
+            clientDataMode: {{ (client_data_mode or 'api') | tojson }},
+            clientDataRoot: {{ (client_data_root or '/data') | tojson }},
+            showOnly: {{ (show_only or 'queue') | tojson }},
+            adminEnabled: {{ admin_enabled | default(false) | tojson }}
+        };
+    </script>
+    <script type="module" src="{{ asset_prefix }}static/js/tournament_dashboard/main.js"></script>
+    {% endif %}
+</body>
+</html>

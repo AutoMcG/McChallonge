@@ -167,3 +167,55 @@ export async function syncFromChallonge() {
         }
     }
 }
+
+
+export async function setMatchUnderway(tournamentKey, matchId) {
+    if (!tournamentKey || matchId == null) {
+        throw new Error('Missing tournament key or match id.');
+    }
+
+    const response = await fetch('/api/cache/match/underway', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            tournament_key: String(tournamentKey),
+            match_id: String(matchId),
+        }),
+    });
+
+    if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload.error || 'Failed to mark match as underway.');
+    }
+
+    const data = await response.json();
+    setActiveTournamentIds(null);
+    renderDashboard(data);
+    setStatusMessage('Match marked as underway.', 'success');
+}
+
+
+export async function clearMatchUnderway(tournamentKey, matchId) {
+    if (!tournamentKey || matchId == null) {
+        throw new Error('Missing tournament key or match id.');
+    }
+
+    const response = await fetch('/api/cache/match/underway/clear', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            tournament_key: String(tournamentKey),
+            match_id: String(matchId),
+        }),
+    });
+
+    if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload.error || 'Failed to clear underway status.');
+    }
+
+    const data = await response.json();
+    setActiveTournamentIds(null);
+    renderDashboard(data);
+    setStatusMessage('Underway status cleared.', 'success');
+}
