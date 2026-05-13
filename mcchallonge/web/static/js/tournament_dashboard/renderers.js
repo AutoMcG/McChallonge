@@ -4,7 +4,7 @@
 
 import { getById, escapeHtml, escapeAttribute } from './helpers.js';
 import { cachedData, activeTournamentIds, config } from './state.js';
-import { getAllTournamentEntries, getAllParticipantMap } from './data.js';
+import { getAllTournamentEntries, getAllParticipantMap, getAllMatches } from './data.js';
 import { getRoundMetadata, getBracketForMatch } from './round-metadata.js';
 import { getFilteredMatches, getFilteredParticipants } from './filters.js';
 
@@ -13,6 +13,45 @@ function renderParticipantThumb(imgUrl, altText, extraClass = '') {
         return '<span class="bot-thumb bot-thumb-placeholder" aria-hidden="true"><i class="fas fa-robot"></i></span>';
     }
     return `<img class="bot-thumb ${extraClass}" src="${escapeAttribute(imgUrl)}" alt="${escapeAttribute(altText)}" loading="lazy">`;
+}
+
+function parseDate(value) {
+    if (!value) return null;
+    const timestamp = Date.parse(value);
+    return Number.isNaN(timestamp) ? null : timestamp;
+}
+
+function buildParticipantLastCompletedMap(matches) {
+    const latestByParticipant = new Map();
+
+    (matches || []).forEach((match) => {
+        const state = String(match?.state || '').toLowerCase();
+        if (state !== 'complete') return;
+
+        const completedAt = parseDate(match?.completed_at);
+        if (completedAt === null) return;
+
+        const participantIds = [match?.player1_id, match?.player2_id];
+        participantIds.forEach((participantId) => {
+            if (participantId === null || participantId === undefined) return;
+            const previous = latestByParticipant.get(participantId);
+            if (previous === undefined || completedAt > previous) {
+                latestByParticipant.set(participantId, completedAt);
+            }
+        });
+    });
+
+    return latestByParticipant;
+}
+
+function renderFoughtMinutesLabel(participantId, latestCompletedByParticipant, nowMs) {
+    if (participantId === null || participantId === undefined) return '';
+    const lastCompletedAt = latestCompletedByParticipant.get(participantId);
+    if (lastCompletedAt === undefined) return '';
+
+    const elapsedMs = Math.max(0, nowMs - lastCompletedAt);
+    const elapsedMinutes = Math.floor(elapsedMs / 60000);
+    return `<span class="player-last-fought">Fought ${elapsedMinutes} minutes ago</span>`;
 }
 
 export function renderTournamentSection() {
@@ -148,6 +187,8 @@ export function renderMatches(matches) {
     }
 
     const participantsById = getAllParticipantMap();
+    const latestCompletedByParticipant = buildParticipantLastCompletedMap(getAllMatches());
+    const nowMs = Date.now();
     const getSuggestedOrder = (match) => {
         const parsed = Number(match.suggested_play_order);
         return Number.isNaN(parsed) ? Number.POSITIVE_INFINITY : parsed;
@@ -248,11 +289,13 @@ export function renderMatches(matches) {
                             <div class="player ${isPlayer1Winner ? 'winner' : ''}">
                                 ${renderParticipantThumb(player1Data.img, player1, 'bot-thumb-sm')}
                                 <span>${escapeHtml(player1)}</span>
+                                ${config.adminEnabled && config.showOnly === 'queue' ? renderFoughtMinutesLabel(match.player1_id, latestCompletedByParticipant, nowMs) : ''}
                             </div>
                             <div class="vs">VS</div>
                             <div class="player ${isPlayer2Winner ? 'winner' : ''}">
                                 ${renderParticipantThumb(player2Data.img, player2, 'bot-thumb-sm')}
                                 <span>${escapeHtml(player2)}</span>
+                                ${config.adminEnabled && config.showOnly === 'queue' ? renderFoughtMinutesLabel(match.player2_id, latestCompletedByParticipant, nowMs) : ''}
                             </div>
                         </div>
                         <div class="match-info">
