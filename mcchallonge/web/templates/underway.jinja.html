@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ title }}</title>
+    <link rel="icon" type="image/webp" href="{{ url_for('static', filename='img/tony.webp') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
     <style>
         body {
@@ -32,6 +33,21 @@
         .meta {
             color: #475569;
             font-size: 0.9rem;
+        }
+        @media (max-width: 767px) {
+            .underway-wrap {
+                padding: 16px 8px;
+            }
+            .banner-card {
+                padding: 10px;
+                border-radius: 10px;
+            }
+            .banner-card img {
+                border-radius: 6px;
+            }
+            .meta {
+                font-size: 0.82rem;
+            }
         }
     </style>
 </head>

@@ -44,7 +44,7 @@ export function renderMatchSearchChips() {
     if (!container) return;
 
     if (!activeMatchSearchChips.length) {
-        container.innerHTML = '<span class="match-filter-chip-empty">No text filters applied.</span>';
+        container.innerHTML = '<span class="match-filter-chip-empty">No filters applied yet.</span>';
         return;
     }
 
@@ -66,7 +66,7 @@ export function renderMatchSearchChips() {
             }
 
             const current = activeMatchSearchChips[index];
-            const updated = window.prompt('Edit match filter chip', current);
+            const updated = window.prompt('Edit match filter', current);
             if (updated === null) {
                 return;
             }
