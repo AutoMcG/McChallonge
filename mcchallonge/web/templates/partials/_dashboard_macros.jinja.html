@@ -22,6 +22,12 @@
             <option value="cache">Server cache (preserve manual underway flags)</option>
         </select>
     </div>
+    <div id="auto-refresh-control" class="auto-refresh-control" style="display:none">
+        <div class="form-check form-switch mb-0">
+            <input class="form-check-input" type="checkbox" id="auto-refresh-toggle" role="switch">
+            <label class="form-check-label small" for="auto-refresh-toggle">Auto-refresh (60s)</label>
+        </div>
+    </div>
     {% endif %}
     <button id="refresh-cache-btn" class="btn btn-light btn-sm" type="button">
         <i class="fas fa-sync-alt me-1"></i> Update Local Cache
