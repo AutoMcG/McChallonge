@@ -107,6 +107,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Auto-refresh toggle: admin queue page only.
+    const autoRefreshControl = getById('auto-refresh-control');
+    const autoRefreshToggle = getById('auto-refresh-toggle');
+    if (autoRefreshControl && autoRefreshToggle && config.adminEnabled && config.showOnly === 'queue' && config.clientDataMode !== 'fixed') {
+        autoRefreshControl.style.display = '';
+        let autoRefreshInterval = null;
+        autoRefreshToggle.addEventListener('change', () => {
+            if (autoRefreshToggle.checked) {
+                autoRefreshInterval = setInterval(updateLocalCache, 60000);
+            } else {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+            }
+        });
+        window.addEventListener('beforeunload', () => {
+            clearInterval(autoRefreshInterval);
+        });
+    }
+
     const nameFilter = getById('participant-name-filter');
     if (nameFilter) {
         nameFilter.addEventListener('input', () => {
