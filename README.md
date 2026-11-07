@@ -371,20 +371,6 @@ Nginx and systemd examples are available at:
 - `deploy/nginx/mcchallonge.conf`
 - `deploy/systemd/mcchallonge.service`
 
-#### Option 2: Serverless static hosting on S3/CloudFront
-
-Terraform and CI/CD scaffolding are included for fixed-filename static data hosting:
-
-- `infra/terraform/envs/prod`
-- `.github/workflows/infra.yml`
-- `.github/workflows/deploy-site.yml`
-- `.github/workflows/deploy-lambda.yml`
-
-Full guide:
-
-- `docs/serverless-s3-terraform-github-actions.md`
-- `infra/terraform/README.md`
-
 ---
 
 ## FAQ & Troubleshooting
