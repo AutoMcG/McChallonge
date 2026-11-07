@@ -2,10 +2,21 @@ from __future__ import annotations
 
 import argparse
 import os
+import webbrowser
+
+from dotenv import find_dotenv, load_dotenv
 
 from .models import SheetEvent
 from .sheets import SheetsClient
 from .workflow import event_to_spreadsheet
+
+
+def _open_created_spreadsheet(url: str) -> None:
+    try:
+        webbrowser.open_new_tab(url)
+    except Exception:
+        # Opening a browser is best-effort; spreadsheet creation already succeeded.
+        pass
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -42,6 +53,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> int:
+    load_dotenv(find_dotenv(usecwd=True))
     args = build_parser().parse_args()
 
     event = SheetEvent.from_json_file(args.event_json)
@@ -77,9 +89,9 @@ def main() -> int:
                 return 1
 
     spreadsheet_id = event_to_spreadsheet(event, client, spreadsheet_title=args.title)
-    print(
-        f"Created spreadsheet: https://docs.google.com/spreadsheets/d/{spreadsheet_id}"
-    )
+    spreadsheet_url = f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}"
+    print(f"Created spreadsheet: {spreadsheet_url}")
+    _open_created_spreadsheet(spreadsheet_url)
     return 0
 
 

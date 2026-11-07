@@ -3,9 +3,16 @@ import tempfile
 from argparse import Namespace
 from unittest.mock import MagicMock
 
+import pytest
+
 from rce2sheet.models import HEADERS, SheetBot, SheetEvent
 from rce2sheet.workflow import event_to_spreadsheet
 import rce2sheet.cli as cli
+
+
+@pytest.fixture(autouse=True)
+def _disable_browser_open(monkeypatch):
+    monkeypatch.setattr(cli, "_open_created_spreadsheet", lambda *_args, **_kwargs: None)
 
 
 SAMPLE_EVENT_DICT = {
@@ -201,6 +208,9 @@ def test_cli_uses_service_account_when_oauth_not_provided(monkeypatch):
         title=None,
     )
     monkeypatch.setattr(cli, "build_parser", lambda: parser_mock)
+    monkeypatch.setattr(cli, "load_dotenv", lambda *args, **kwargs: None)
+    monkeypatch.delenv("GOOGLE_OAUTH_CLIENT_SECRETS", raising=False)
+    monkeypatch.delenv("GOOGLE_APPLICATION_CREDENTIALS", raising=False)
 
     event = SheetEvent.from_dict(SAMPLE_EVENT_DICT)
     from_json_mock = MagicMock(return_value=event)
@@ -234,10 +244,12 @@ def test_cli_uses_stored_token_when_no_auth_flag_provided(monkeypatch):
         title=None,
     )
     monkeypatch.setattr(cli, "build_parser", lambda: parser_mock)
+    monkeypatch.setattr(cli, "load_dotenv", lambda *args, **kwargs: None)
 
     event = SheetEvent.from_dict(SAMPLE_EVENT_DICT)
     monkeypatch.setattr(cli.SheetEvent, "from_json_file", MagicMock(return_value=event))
     monkeypatch.delenv("GOOGLE_APPLICATION_CREDENTIALS", raising=False)
+    monkeypatch.delenv("GOOGLE_OAUTH_CLIENT_SECRETS", raising=False)
 
     stored_client = MagicMock()
     oauth_ctor = MagicMock(return_value=stored_client)
@@ -263,6 +275,7 @@ def test_cli_uses_oauth_client_secrets_env_var_when_arg_not_provided(monkeypatch
         title="Event Title",
     )
     monkeypatch.setattr(cli, "build_parser", lambda: parser_mock)
+    monkeypatch.setattr(cli, "load_dotenv", lambda *args, **kwargs: None)
     monkeypatch.setenv("GOOGLE_OAUTH_CLIENT_SECRETS", "env_client_secret.json")
 
     event = SheetEvent.from_dict(SAMPLE_EVENT_DICT)
@@ -282,6 +295,43 @@ def test_cli_uses_oauth_client_secrets_env_var_when_arg_not_provided(monkeypatch
     oauth_ctor.assert_called_once_with("env_client_secret.json", token_path="rce2sheet_token.json")
 
 
+def test_cli_loads_oauth_client_secrets_from_dotenv(monkeypatch, tmp_path):
+    parser_mock = MagicMock()
+    parser_mock.parse_args.return_value = Namespace(
+        event_json="event.json",
+        credentials=None,
+        oauth_client_secrets=None,
+        oauth_token="rce2sheet_token.json",
+        title="Event Title",
+    )
+    monkeypatch.setattr(cli, "build_parser", lambda: parser_mock)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv("GOOGLE_OAUTH_CLIENT_SECRETS", raising=False)
+    monkeypatch.delenv("GOOGLE_APPLICATION_CREDENTIALS", raising=False)
+    (tmp_path / ".env").write_text(
+        "GOOGLE_OAUTH_CLIENT_SECRETS=dotenv_client_secret.json\n",
+        encoding="utf-8",
+    )
+    monkeypatch.delenv("GOOGLE_OAUTH_CLIENT_SECRETS", raising=False)
+
+    event = SheetEvent.from_dict(SAMPLE_EVENT_DICT)
+    monkeypatch.setattr(cli.SheetEvent, "from_json_file", MagicMock(return_value=event))
+
+    oauth_client = MagicMock()
+    oauth_ctor = MagicMock(return_value=oauth_client)
+    monkeypatch.setattr(cli.SheetsClient, "from_user_oauth", oauth_ctor)
+
+    export_mock = MagicMock(return_value="spreadsheet_123")
+    monkeypatch.setattr(cli, "event_to_spreadsheet", export_mock)
+
+    exit_code = cli.main()
+
+    assert exit_code == 0
+    oauth_ctor.assert_called_once_with(
+        "dotenv_client_secret.json", token_path="rce2sheet_token.json"
+    )
+
+
 def test_cli_fails_when_no_auth_and_no_stored_token(monkeypatch, capsys):
     parser_mock = MagicMock()
     parser_mock.parse_args.return_value = Namespace(
@@ -292,6 +342,7 @@ def test_cli_fails_when_no_auth_and_no_stored_token(monkeypatch, capsys):
         title=None,
     )
     monkeypatch.setattr(cli, "build_parser", lambda: parser_mock)
+    monkeypatch.setattr(cli, "load_dotenv", lambda *args, **kwargs: None)
 
     event = SheetEvent.from_dict(SAMPLE_EVENT_DICT)
     monkeypatch.setattr(cli.SheetEvent, "from_json_file", MagicMock(return_value=event))

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link rel="icon" type="image/webp" href="{{ url_for('static', filename='img/tony.webp') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <style>
+        body {
+            background: #f8fafc;
+        }
+        .underway-wrap {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px 12px;
+        }
+        .banner-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            background: #ffffff;
+            padding: 12px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05);
+        }
+        .banner-card img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            display: block;
+        }
+        .meta {
+            color: #475569;
+            font-size: 0.9rem;
+        }
+        @media (max-width: 767px) {
+            .underway-wrap {
+                padding: 16px 8px;
+            }
+            .banner-card {
+                padding: 10px;
+                border-radius: 10px;
+            }
+            .banner-card img {
+                border-radius: 6px;
+            }
+            .meta {
+                font-size: 0.82rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="underway-wrap">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <h1 class="h3 mb-0">Underway Matches</h1>
+        <a href="{{ url_for('tournament_page') }}" class="btn btn-outline-secondary btn-sm">Back to Dashboard</a>
+    </div>
+
+    <p id="underway-generated-at" class="meta mb-3" {% if not generated_at %}style="display:none;"{% endif %}>
+        Last generated: {{ generated_at }}
+    </p>
+
+    <div id="underway-banners">
+    {% if banners and banners|length > 0 %}
+        {% for banner in banners %}
+        <div class="banner-card">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                <strong>{{ banner.title }}</strong>
+                <span class="meta">{{ banner.tournament_name }}</span>
+            </div>
+            <img src="{{ banner.url }}" alt="{{ banner.title }}">
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="alert alert-info">No underway matches right now.</div>
+    {% endif %}
+    </div>
+</div>
+<script src="{{ url_for('static', filename='js/underway.js') }}" defer></script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+{% from "partials/_dashboard_macros.jinja.html" import render_client_loading_text %}
+<div class="card">
+    <div class="card-header">
+        <i class="fas fa-info-circle me-2"></i> Event Details
+    </div>
+    <div class="card-body" id="event-details-container">
+        {% if is_client %}
+        {{ render_client_loading_text("Loading event details...") }}
+        {% else %}
+        {% for t in tournaments %}
+        {% if tournaments|length > 1 %}
+        <h6 class="fw-bold mt-2 {% if not loop.first %}border-top pt-2{% endif %}">{{ t.name }}</h6>
+        {% endif %}
+        <p><strong>Name:</strong> {{ t.name }}</p>
+        <p><strong>URL:</strong> <a href="https://challonge.com/{{ t.url }}" target="_blank">{{ t.url }}</a></p>
+        <p><strong>Started:</strong> {{ t.started_at|default('Not started') }}</p>
+        <p><strong>Completed:</strong> {{ t.completed_at|default('In progress') }}</p>
+        {% endfor %}
+        {% endif %}
+
+        {% if custom_content %}
+        <div class="mt-4 pt-4 border-top">
+            <h5>Additional Information</h5>
+            {{ custom_content|safe }}
+        </div>
+        {% endif %}
+    </div>
+</div>

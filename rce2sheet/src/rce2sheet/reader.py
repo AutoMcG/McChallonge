@@ -7,6 +7,8 @@ import os
 import re
 from dataclasses import dataclass, field
 
+from dotenv import find_dotenv, load_dotenv
+
 from .sheets import SheetsClient
 
 # Column indices (0-based) matching HEADERS in models.py
@@ -168,6 +170,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> int:
+    load_dotenv(find_dotenv(usecwd=True))
     args = _build_parser().parse_args()
 
     # Determine OAuth client secrets path: explicit arg > env var > None
