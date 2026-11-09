@@ -7,11 +7,17 @@
         title="Collapse sidebar"
     ></button>
     <div class="sidebar-header">
-        <div>
+        <div class="sidebar-header-brand">
             <div class="sidebar-title">McChallonge</div>
             <div class="sidebar-subtitle">Navigation</div>
             <div class="sidebar-title-compact" aria-hidden="true">McC</div>
         </div>
+        <label class="sidebar-theme-switch" for="theme-toggle" title="Toggle dark mode" aria-label="Toggle dark mode">
+            <i class="fas fa-sun sidebar-theme-icon" aria-hidden="true"></i>
+            <input type="checkbox" id="theme-toggle">
+            <span class="sidebar-theme-slider" aria-hidden="true"></span>
+            <i class="fas fa-moon sidebar-theme-icon" aria-hidden="true"></i>
+        </label>
     </div>
     <nav class="sidebar-nav nav flex-column">
         <a class="nav-link {% if current_page == 'dashboard' %}active{% endif %}" href="{{ url_for('tournament_page') }}" title="Dashboard">

@@ -34,6 +34,26 @@
             color: #475569;
             font-size: 0.9rem;
         }
+        body.theme-dark {
+            background: #0f172a;
+            color: #e5e7eb;
+        }
+        body.theme-dark .banner-card {
+            background: #111827;
+            border-color: #233044;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+        }
+        body.theme-dark .banner-card img {
+            border-color: #334155;
+        }
+        body.theme-dark .meta {
+            color: #9ca3af;
+        }
+        body.theme-dark .alert-info {
+            background-color: #1f2937;
+            border-color: #334155;
+            color: #d1d5db;
+        }
         @media (max-width: 767px) {
             .underway-wrap {
                 padding: 16px 8px;
@@ -78,6 +98,7 @@
     {% endif %}
     </div>
 </div>
+<script src="{{ url_for('static', filename='js/theme.js') }}"></script>
 <script src="{{ url_for('static', filename='js/underway.js') }}" defer></script>
 </body>
 </html>

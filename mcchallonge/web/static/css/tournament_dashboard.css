@@ -53,8 +53,16 @@ body {
 }
 
 .sidebar-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
     padding: 18px 16px 12px;
     border-bottom: 1px solid #e5edf4;
+}
+
+.sidebar-header-brand {
+    min-width: 0;
 }
 
 .sidebar-title {
@@ -73,6 +81,56 @@ body {
     font-size: 0.95rem;
     font-weight: 700;
     color: #1f2d3d;
+}
+
+.sidebar-theme-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #6b7b8d;
+    cursor: pointer;
+    user-select: none;
+}
+
+.sidebar-theme-switch input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.sidebar-theme-icon {
+    font-size: 0.75rem;
+}
+
+.sidebar-theme-slider {
+    position: relative;
+    width: 30px;
+    height: 16px;
+    border-radius: 999px;
+    background: #cbd5e1;
+    transition: background-color 0.2s ease;
+}
+
+.sidebar-theme-slider::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.25);
+    transition: transform 0.2s ease;
+}
+
+#theme-toggle:checked + .sidebar-theme-slider {
+    background: #2563eb;
+}
+
+#theme-toggle:checked + .sidebar-theme-slider::after {
+    transform: translateX(14px);
 }
 
 .sidebar-nav {
@@ -147,6 +205,7 @@ body {
 
 .app-shell.sidebar-compact .sidebar-header {
     padding: 12px 8px;
+    align-items: center;
 }
 
 .app-shell.sidebar-compact .sidebar-title {
@@ -722,6 +781,209 @@ body {
     #match-text-filter-chips {
         width: 100%;
     }
+}
+
+body.theme-dark {
+    background-color: #0f172a;
+    color: #e5e7eb;
+}
+
+body.theme-dark .app-sidebar {
+    background: #111827;
+    border-right-color: #233044;
+    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.3);
+}
+
+body.theme-dark .sidebar-header {
+    border-bottom-color: #233044;
+}
+
+body.theme-dark .sidebar-title,
+body.theme-dark .sidebar-title-compact {
+    color: #e5e7eb;
+}
+
+body.theme-dark .sidebar-subtitle,
+body.theme-dark .sidebar-theme-switch {
+    color: #9ca3af;
+}
+
+body.theme-dark .sidebar-theme-slider {
+    background: #475569;
+}
+
+body.theme-dark #theme-toggle:checked + .sidebar-theme-slider {
+    background: #3b82f6;
+}
+
+body.theme-dark .sidebar-nav .nav-link {
+    color: #d1d5db;
+}
+
+body.theme-dark .sidebar-nav .nav-link:hover {
+    background-color: #1f2937;
+    color: #f3f4f6;
+}
+
+body.theme-dark .sidebar-nav .nav-link.active {
+    background-color: #1d4ed8;
+    color: #eff6ff;
+}
+
+body.theme-dark .sidebar-admin-label {
+    color: #fdba74;
+}
+
+body.theme-dark .sidebar-nav .nav-link.nav-link-admin {
+    background: #3b2b17;
+    border-color: #5a3f20;
+}
+
+body.theme-dark .sidebar-nav .nav-link.nav-link-admin:hover {
+    background: #4a331a;
+    border-color: #7a552c;
+}
+
+body.theme-dark .sidebar-edge-toggle {
+    border-left-color: #2f445f;
+    background: linear-gradient(180deg, #1f344a 0%, #182a3f 100%);
+}
+
+body.theme-dark .sidebar-edge-toggle:hover,
+body.theme-dark .sidebar-edge-toggle:focus-visible {
+    background: linear-gradient(180deg, #2a4461 0%, #20344f 100%);
+}
+
+body.theme-dark .tournament-header {
+    background: linear-gradient(135deg, #1e3a5f, #111827);
+}
+
+body.theme-dark .tournament-header .text-muted {
+    color: #cbd5e1 !important;
+}
+
+body.theme-dark .card {
+    background: #111827;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+}
+
+body.theme-dark .card-header {
+    background-color: #1f2937;
+    color: #f9fafb;
+}
+
+body.theme-dark .table {
+    --bs-table-bg: #162133;
+    --bs-table-color: #dbe3ef;
+    --bs-table-border-color: #2b3648;
+    --bs-table-striped-bg: #1b2940;
+    --bs-table-striped-color: #dbe3ef;
+    --bs-table-hover-bg: #22324b;
+    --bs-table-hover-color: #f3f4f6;
+    color: var(--bs-table-color);
+}
+
+body.theme-dark .table > :not(caption) > * > * {
+    background-color: var(--bs-table-bg);
+}
+
+body.theme-dark .table th {
+    background-color: #1f2937;
+    color: #e5e7eb;
+    border-color: #2b3648;
+}
+
+body.theme-dark .table td {
+    color: #d1d5db;
+    border-color: #2b3648;
+}
+
+body.theme-dark .participants-table tbody tr:hover {
+    background-color: rgba(59, 130, 246, 0.12);
+}
+
+body.theme-dark .match .player {
+    background-color: #1f2937;
+    color: #e5e7eb;
+}
+
+body.theme-dark .match .player span {
+    color: inherit;
+}
+
+body.theme-dark .match .player.winner {
+    background-color: rgba(22, 163, 74, 0.2);
+}
+
+body.theme-dark .match .vs {
+    color: #d1d5db;
+}
+
+body.theme-dark .match .round {
+    color: #cbd5e1;
+}
+
+body.theme-dark .match .date,
+body.theme-dark .empty-state,
+body.theme-dark .footer {
+    color: #9ca3af;
+}
+
+body.theme-dark .player-last-fought {
+    color: #cbd5e1;
+}
+
+body.theme-dark .tournament-group .text-muted {
+    color: #cbd5e1 !important;
+}
+
+body.theme-dark .tournament-group {
+    background-color: transparent;
+}
+
+body.theme-dark .tournament-tone-0,
+body.theme-dark .tournament-tone-1,
+body.theme-dark .tournament-tone-2,
+body.theme-dark .tournament-tone-3,
+body.theme-dark .tournament-tone-4,
+body.theme-dark .tournament-tone-5 {
+    background-color: #0b1220;
+}
+
+body.theme-dark .header-action-btn {
+    background-color: #e5e7eb;
+    color: #111827;
+    border-color: #e5e7eb;
+}
+
+body.theme-dark .notification-unread {
+    background-color: #3d2a14;
+    color: #e5e7eb;
+}
+
+body.theme-dark .notification-read {
+    background-color: #1f2937;
+    color: #e5e7eb;
+}
+
+body.theme-dark .notification-unread .text-muted,
+body.theme-dark .notification-read .text-muted {
+    color: #cbd5e1 !important;
+}
+
+body.theme-dark #subscriptions-robot-groups h6,
+body.theme-dark #admin-robot-groups h6 {
+    color: #e5e7eb;
+}
+
+body.theme-dark #inbox-subscriptions-summary .text-muted {
+    color: #cbd5e1 !important;
+}
+
+body.theme-dark .subscription-pill {
+    border-color: #31557f;
+    background-color: #1f3b63 !important;
+    color: #dbeafe !important;
 }
 
 @media (max-width: 767px) {
