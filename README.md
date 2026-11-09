@@ -350,6 +350,20 @@ pytest
 Integration tests hit the live Challonge API and are deselected by default.
 To run them, mark with `-m integration` and ensure credentials are set in `.env`.
 
+### Agent validation matrix
+
+Use the smallest test selector that covers the changed behavior:
+
+| Change area | Recommended command |
+|---|---|
+| `mcchallonge/app.py`, dashboard templates/JS/CSS | `pytest -q mcchallonge/tests/test_app_endpoints.py mcchallonge/tests/test_cli.py` |
+| `mcchallonge/services/*` | `pytest -q mcchallonge/tests` |
+| `mcrobotcombatevents/src/*` | `pytest -q mcrobotcombatevents/tests` |
+| `rce2sheet/src/*` | `pytest -q rce2sheet/tests` |
+| Cross-package behavior | `pytest -q` |
+
+Docs-only changes do not require test execution.
+
 ### Production Hosting Options
 
 #### Option 1: Reverse proxy with Nginx + Waitress
@@ -426,3 +440,15 @@ FLASK_RUN_PORT=5001 python -m mcchallonge.app
 ```
 
 Then open http://127.0.0.1:5001
+
+### Pytest warning: "could not open directory '.pytest_cache/'" or cache permission errors
+
+**Problem:** In some local environments, `.pytest_cache` can be permission-locked and produce warnings.
+
+**Solution:** Run pytest with cache disabled:
+
+```bash
+pytest -q -p no:cacheprovider
+```
+
+You can also remove or fix permissions on `.pytest_cache` if you control the environment.
