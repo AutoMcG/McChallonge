@@ -381,38 +381,59 @@ async function initializeSubscriptionsPage() {
     }
 }
 
-async function loadInbox() {
+function setInboxLastFetchedNow() {
+    const label = getById('inbox-last-fetched');
+    if (!label) return;
+    label.textContent = `Last fetched: ${new Date().toLocaleTimeString()}`;
+}
+
+async function loadInbox(robots) {
     const subscriptions = Array.from(loadSubscriptions());
+    const hasRobotsSnapshot = Array.isArray(robots);
     if (!subscriptions.length) {
+        if (hasRobotsSnapshot) {
+            renderInboxSubscriptionSummary(robots);
+        }
         renderInbox([]);
         setStatus('Subscribe to one or more robots to receive notifications.', 'info');
+        setInboxLastFetchedNow();
         return;
     }
 
     try {
+        if (hasRobotsSnapshot) {
+            renderInboxSubscriptionSummary(robots);
+        }
         const notifications = await fetchSubscribedNotifications(subscriptions);
         renderInbox(notifications);
         setStatus('', 'info');
+        setInboxLastFetchedNow();
     } catch (error) {
         setStatus(error.message || 'Failed to load inbox notifications.', 'danger');
     }
 }
 
+async function refreshInboxData() {
+    try {
+        const robots = await fetchRobotDirectory();
+        await loadInbox(robots);
+    } catch {
+        const root = getById('inbox-subscriptions-summary');
+        if (root) {
+            root.innerHTML = '<p class="empty-state mb-0">Unable to load subscribed robot details from cache right now.</p>';
+        }
+        await loadInbox();
+    }
+}
+
 function initializeInboxPage() {
-    const loadInboxWithGuard = () => loadInbox();
+    const loadInboxWithGuard = () => refreshInboxData();
     const refreshButton = getById('refresh-inbox');
     if (refreshButton) {
         refreshButton.addEventListener('click', loadInboxWithGuard);
     }
-    fetchRobotDirectory()
-        .then((robots) => renderInboxSubscriptionSummary(robots))
-        .catch(() => {
-            const root = getById('inbox-subscriptions-summary');
-            if (!root) return;
-            root.innerHTML = '<p class="empty-state mb-0">Unable to load subscribed robot details from cache right now.</p>';
-        });
     loadInboxWithGuard();
-    window.setInterval(loadInboxWithGuard, 20000);
+    window.setInterval(loadInboxWithGuard, 60000);
 }
 
 async function initializeAdminPage() {

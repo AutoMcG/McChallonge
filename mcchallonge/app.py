@@ -100,6 +100,15 @@ def _admin_enabled() -> bool:
 
 
 def _render_client_dashboard(title: str, show_only: str | None = None):
+    if show_only == "participants":
+        current_page = "participants"
+    elif show_only == "matches":
+        current_page = "matches"
+    elif show_only == "queue":
+        current_page = "queue"
+    else:
+        current_page = "dashboard"
+
     return render_template(
         'tournament_dashboard.jinja.html',
         title=title,
@@ -110,18 +119,25 @@ def _render_client_dashboard(title: str, show_only: str | None = None):
         client_data_root=_client_data_root(),
         admin_enabled=_admin_enabled(),
         show_only=show_only,
+        current_page=current_page,
         logo_url=_resolve_logo_url(),
     )
 
 
 def _render_notifications_page(title: str, page_mode: str):
     admin_enabled = _admin_enabled()
+    current_page = {
+        "subscriptions": "notifications-subscriptions",
+        "inbox": "notifications-inbox",
+        "admin": "notifications-admin",
+    }.get(page_mode, "notifications-inbox")
     return render_template(
         'notifications.jinja.html',
         title=title,
         current_date=time.strftime("%Y-%m-%d %H:%M"),
         logo_url=_resolve_logo_url(),
         page_mode=page_mode,
+        current_page=current_page,
         admin_enabled=admin_enabled,
         api_notifications_robots_url=url_for('notifications_robots'),
         api_notifications_subscribed_url=url_for('notifications_subscribed'),
@@ -163,6 +179,7 @@ def queue_page():
         client_data_mode=_client_data_mode(),
         client_data_root=_client_data_root(),
         admin_enabled=_admin_enabled(),
+        current_page='queue',
         logo_url=_resolve_logo_url(),
     )
 
@@ -196,6 +213,8 @@ def underway_page():
         title="Underway Matches",
         generated_at=manifest.get("generated_at"),
         banners=manifest.get("banners") or [],
+        admin_enabled=_admin_enabled(),
+        current_page='underway',
     )
 
 

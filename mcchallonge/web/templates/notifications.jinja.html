@@ -10,103 +10,107 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/tournament_dashboard.css') }}">
 </head>
 <body>
-<div class="container py-3">
-    <div class="tournament-header mb-3">
-        <h1 class="mb-1">{{ title }}</h1>
-        <p class="mb-0 text-muted">
-            {% if page_mode == "subscriptions" %}
-            Subscribe to specific robots for queue/EO notifications.
-            {% elif page_mode == "inbox" %}
-            View notifications for subscribed robots and mark items read locally.
-            {% else %}
-            Send and audit robot notifications (loopback admin only).
-            {% endif %}
-        </p>
-        <div class="logo-container">
-            <img src="{{ logo_url|default('https://via.placeholder.com/150x150.png?text=Tournament') }}" alt="Tournament Logo">
-        </div>
-    </div>
-
-    <div id="status-message" class="alert status-message" role="alert" style="display:none;"></div>
-
-    <div id="subscriptions-panel" class="card" {% if page_mode != "subscriptions" %}style="display:none"{% endif %}>
-        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <span><i class="fas fa-bell me-2"></i>Robot Subscriptions</span>
-        </div>
-        <div class="card-body">
-            <div id="subscriptions-robot-groups">
-                <p class="empty-state mb-0">Loading robots...</p>
-            </div>
-        </div>
-    </div>
-
-    <div id="inbox-panel" class="card" {% if page_mode != "inbox" %}style="display:none"{% endif %}>
-        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <span><i class="fas fa-inbox me-2"></i>Notification Inbox</span>
-            <button id="refresh-inbox" class="btn btn-light btn-sm header-action-btn" type="button">
-                <i class="fas fa-sync-alt me-1"></i>Refresh
-            </button>
-        </div>
-        <div id="inbox-subscriptions-summary" class="card-body border-bottom">
-            <p class="empty-state mb-0">Loading your subscriptions...</p>
-        </div>
-        <div id="inbox-list" class="card-body">
-            <p class="empty-state mb-0">Loading notifications...</p>
-        </div>
-    </div>
-
-    <div id="admin-panel" {% if page_mode != "admin" %}style="display:none"{% endif %}>
-        <div class="card mb-3">
-            <div class="card-header">
-                <i class="fas fa-bullhorn me-2"></i>Send Notifications
-            </div>
-            <div class="card-body p-0">
-                <div id="admin-robot-groups" class="p-3">
-                    <p class="empty-state mb-0">Loading robots...</p>
+<div class="app-shell">
+    <button class="btn btn-primary btn-sm sidebar-toggle-btn d-lg-none m-2" type="button" data-bs-toggle="collapse" data-bs-target="#app-sidebar-nav" aria-controls="app-sidebar-nav" aria-expanded="false">
+        <i class="fas fa-bars me-1"></i> Menu
+    </button>
+    {% include "partials/_sidebar.jinja.html" %}
+    <main class="app-main">
+        <div class="container-fluid py-3">
+            <div class="tournament-header mb-3">
+                <h1 class="mb-1">{{ title }}</h1>
+                <p class="mb-0 text-muted">
+                    {% if page_mode == "subscriptions" %}
+                    Subscribe to specific robots for queue/EO notifications.
+                    {% elif page_mode == "inbox" %}
+                    View notifications for subscribed robots.
+                    {% else %}
+                    Send and audit robot notifications (loopback admin only).
+                    {% endif %}
+                </p>
+                <div class="logo-container">
+                    <img src="{{ logo_url|default('https://via.placeholder.com/150x150.png?text=Tournament') }}" alt="Tournament Logo">
                 </div>
             </div>
-        </div>
 
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <span><i class="fas fa-clipboard-list me-2"></i>Notification Audit</span>
-                <button id="refresh-audit" class="btn btn-outline-secondary btn-sm" type="button">
-                    <i class="fas fa-sync-alt me-1"></i>Refresh
-                </button>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table mb-0">
-                        <thead>
-                        <tr>
-                            <th>When</th>
-                            <th>Type</th>
-                            <th>Robot</th>
-                            <th>Team</th>
-                            <th>Competition</th>
-                            <th>Message</th>
-                        </tr>
-                        </thead>
-                        <tbody id="audit-table-body">
-                        <tr><td colspan="6" class="empty-state">No notifications sent yet.</td></tr>
-                        </tbody>
-                    </table>
+            <div id="status-message" class="alert status-message" role="alert" style="display:none;"></div>
+
+            <div id="subscriptions-panel" class="card" {% if page_mode != "subscriptions" %}style="display:none"{% endif %}>
+                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <span><i class="fas fa-bell me-2"></i>Robot Subscriptions</span>
+                </div>
+                <div class="card-body">
+                    <div id="subscriptions-robot-groups">
+                        <p class="empty-state mb-0">Loading robots...</p>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <div class="footer mt-3">
-        <p>Generated by McChallonge on {{ current_date }}</p>
-        <p>
-            <a href="{{ url_for('tournament_page') }}">Full Dashboard</a> |
-            <a href="{{ url_for('notifications_subscriptions_page') }}">Subscriptions</a> |
-            <a href="{{ url_for('notifications_inbox_page') }}">Inbox</a>
-            {% if admin_enabled %}
-            | <a href="{{ url_for('notifications_admin_page') }}">Admin Notifications</a>
-            {% endif %}
-        </p>
-    </div>
+            <div id="inbox-panel" class="card" {% if page_mode != "inbox" %}style="display:none"{% endif %}>
+                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <span><i class="fas fa-inbox me-2"></i>Notification Inbox</span>
+                    <div class="d-flex align-items-center gap-2">
+                        <span id="inbox-last-fetched" class="small text-white-50">Last fetched: --</span>
+                        <button id="refresh-inbox" class="btn btn-light btn-sm header-action-btn" type="button">
+                            <i class="fas fa-sync-alt me-1"></i>Refresh
+                        </button>
+                    </div>
+                </div>
+                <div id="inbox-subscriptions-summary" class="card-body border-bottom">
+                    <p class="empty-state mb-0">Loading your subscriptions...</p>
+                </div>
+                <div id="inbox-list" class="card-body">
+                    <p class="empty-state mb-0">Loading notifications...</p>
+                </div>
+            </div>
+
+            <div id="admin-panel" {% if page_mode != "admin" %}style="display:none"{% endif %}>
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <i class="fas fa-bullhorn me-2"></i>Send Notifications
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="admin-robot-groups" class="p-3">
+                            <p class="empty-state mb-0">Loading robots...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <span><i class="fas fa-clipboard-list me-2"></i>Notification Audit</span>
+                        <button id="refresh-audit" class="btn btn-outline-secondary btn-sm" type="button">
+                            <i class="fas fa-sync-alt me-1"></i>Refresh
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table mb-0">
+                                <thead>
+                                <tr>
+                                    <th>When</th>
+                                    <th>Type</th>
+                                    <th>Robot</th>
+                                    <th>Team</th>
+                                    <th>Competition</th>
+                                    <th>Message</th>
+                                </tr>
+                                </thead>
+                                <tbody id="audit-table-body">
+                                <tr><td colspan="6" class="empty-state">No notifications sent yet.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer mt-3">
+                <p>Generated by McChallonge on {{ current_date }}</p>
+                <p><a href="https://github.com/AutoMcG/McChallonge" target="_blank">GitHub Repository</a></p>
+            </div>
+        </div>
+    </main>
 </div>
 <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
 <script>
@@ -120,5 +124,6 @@
     };
 </script>
 <script type="module" src="{{ url_for('static', filename='js/notifications_main.js') }}"></script>
+<script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
 </body>
 </html>

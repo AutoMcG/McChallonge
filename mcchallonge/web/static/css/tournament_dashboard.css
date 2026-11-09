@@ -13,6 +13,156 @@ body {
     padding: 20px;
 }
 
+.app-shell {
+    display: flex;
+    align-items: flex-start;
+    min-height: 100vh;
+}
+
+.app-sidebar {
+    width: 260px;
+    min-width: 260px;
+    background: #fff;
+    border-right: 1px solid #d9e2ec;
+    box-shadow: 2px 0 12px rgba(15, 23, 42, 0.06);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: 1040;
+}
+
+.sidebar-edge-toggle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 14px;
+    height: 100%;
+    border: none;
+    border-left: 1px solid #c8d8e8;
+    background: linear-gradient(180deg, #d7e7f7 0%, #c9ddf2 100%);
+    cursor: ew-resize;
+    padding: 0;
+}
+
+.sidebar-edge-toggle:hover,
+.sidebar-edge-toggle:focus-visible {
+    background: linear-gradient(180deg, #c9ddf2 0%, #b9d1ea 100%);
+    outline: none;
+}
+
+.sidebar-header {
+    padding: 18px 16px 12px;
+    border-bottom: 1px solid #e5edf4;
+}
+
+.sidebar-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1f2d3d;
+}
+
+.sidebar-subtitle {
+    font-size: 0.82rem;
+    color: #6b7b8d;
+}
+
+.sidebar-title-compact {
+    display: none;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1f2d3d;
+}
+
+.sidebar-nav {
+    padding: 10px 8px 14px;
+    gap: 4px;
+}
+
+.sidebar-nav .nav-link {
+    border-radius: 8px;
+    color: #324a5f;
+    font-weight: 600;
+    padding: 10px 12px;
+}
+
+.sidebar-nav .nav-link:hover {
+    background-color: #eef5fb;
+    color: #23384a;
+}
+
+.sidebar-nav .nav-link.active {
+    background-color: #dceeff;
+    color: #1f5f96;
+}
+
+.sidebar-admin-label {
+    margin: 12px 10px 4px;
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9a5a0f;
+    font-weight: 700;
+}
+
+.sidebar-nav .nav-link.nav-link-admin {
+    background: #fff7ec;
+    border: 1px solid #fde6c8;
+}
+
+.sidebar-nav .nav-link.nav-link-admin:hover {
+    background: #ffeecf;
+    border-color: #fbd9a7;
+}
+
+.app-main {
+    flex: 1;
+    min-width: 0;
+    padding: 14px;
+}
+
+.app-shell.sidebar-compact .app-sidebar {
+    width: 76px;
+    min-width: 76px;
+}
+
+.app-shell.sidebar-compact .sidebar-edge-toggle {
+    width: 16px;
+}
+
+.app-shell.sidebar-compact .sidebar-subtitle,
+.app-shell.sidebar-compact .sidebar-link-text,
+.app-shell.sidebar-compact .sidebar-admin-label {
+    display: none;
+}
+
+.app-shell.sidebar-compact .sidebar-title {
+    display: none;
+}
+
+.app-shell.sidebar-compact .sidebar-title-compact {
+    display: block;
+}
+
+.app-shell.sidebar-compact .sidebar-header {
+    padding: 12px 8px;
+}
+
+.app-shell.sidebar-compact .sidebar-title {
+    font-size: 0.85rem;
+}
+
+.app-shell.sidebar-compact .sidebar-nav .nav-link {
+    justify-content: center;
+    text-align: center;
+    padding: 10px 6px;
+}
+
+.app-shell.sidebar-compact .sidebar-nav .nav-link i {
+    margin-right: 0 !important;
+}
+
 .tournament-header {
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     color: white;
@@ -478,6 +628,48 @@ body {
 @media (max-width: 991px) {
     body {
         padding: 12px;
+    }
+
+    .app-shell {
+        display: block;
+        min-height: auto;
+    }
+
+    .app-sidebar {
+        width: 100%;
+        min-width: 0;
+        height: auto;
+        position: static;
+        margin-bottom: 10px;
+    }
+
+    .sidebar-edge-toggle {
+        width: 12px;
+    }
+
+    .app-shell.sidebar-compact .app-sidebar {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .app-shell.sidebar-compact .sidebar-subtitle,
+    .app-shell.sidebar-compact .sidebar-link-text,
+    .app-shell.sidebar-compact .sidebar-admin-label {
+        display: inline;
+    }
+
+    .app-shell.sidebar-compact .sidebar-nav .nav-link {
+        justify-content: flex-start;
+        text-align: left;
+        padding: 10px 12px;
+    }
+
+    .app-shell.sidebar-compact .sidebar-nav .nav-link i {
+        margin-right: 0.5rem !important;
+    }
+
+    .app-main {
+        padding: 0;
     }
 
     .tournament-header {
