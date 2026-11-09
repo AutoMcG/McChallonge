@@ -1,0 +1,234 @@
+/* Theme variables */
+:root {
+    --primary-color: #3498db;
+    --secondary-color: #2c3e50;
+    --accent-color: #e74c3c;
+    --light-color: #ecf0f1;
+    --dark-color: #2c3e50;
+}
+
+/* Page shell */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+    color: var(--dark-color);
+    padding: 20px;
+}
+
+.app-shell {
+    display: flex;
+    align-items: flex-start;
+    min-height: 100vh;
+}
+
+/* Sidebar */
+.app-sidebar {
+    width: 260px;
+    min-width: 260px;
+    background: #fff;
+    border-right: 1px solid #d9e2ec;
+    box-shadow: 2px 0 12px rgba(15, 23, 42, 0.06);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: 1040;
+}
+
+.sidebar-edge-toggle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 14px;
+    height: 100%;
+    border: none;
+    border-left: 1px solid #c8d8e8;
+    background: linear-gradient(180deg, #d7e7f7 0%, #c9ddf2 100%);
+    cursor: ew-resize;
+    padding: 0;
+}
+
+.sidebar-edge-toggle:hover,
+.sidebar-edge-toggle:focus-visible {
+    background: linear-gradient(180deg, #c9ddf2 0%, #b9d1ea 100%);
+    outline: none;
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 18px 16px 12px;
+    border-bottom: 1px solid #e5edf4;
+}
+
+.sidebar-header-brand {
+    min-width: 0;
+}
+
+.sidebar-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1f2d3d;
+}
+
+.sidebar-subtitle {
+    font-size: 0.82rem;
+    color: #6b7b8d;
+}
+
+.sidebar-title-compact {
+    display: none;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1f2d3d;
+}
+
+.sidebar-theme-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #6b7b8d;
+    cursor: pointer;
+    user-select: none;
+}
+
+.sidebar-theme-switch input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.sidebar-theme-icon {
+    font-size: 0.75rem;
+}
+
+.sidebar-theme-slider {
+    position: relative;
+    width: 30px;
+    height: 16px;
+    border-radius: 999px;
+    background: #cbd5e1;
+    transition: background-color 0.2s ease;
+}
+
+.sidebar-theme-slider::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.25);
+    transition: transform 0.2s ease;
+}
+
+#theme-toggle:checked + .sidebar-theme-slider {
+    background: #2563eb;
+}
+
+#theme-toggle:checked + .sidebar-theme-slider::after {
+    transform: translateX(14px);
+}
+
+.sidebar-nav {
+    padding: 10px 8px 14px;
+    gap: 4px;
+}
+
+.sidebar-nav .nav-link {
+    border-radius: 8px;
+    color: #324a5f;
+    font-weight: 600;
+    padding: 10px 12px;
+}
+
+.sidebar-nav .nav-link:hover {
+    background-color: #eef5fb;
+    color: #23384a;
+}
+
+.sidebar-nav .nav-link.active {
+    background-color: #dceeff;
+    color: #1f5f96;
+}
+
+.sidebar-admin-label {
+    margin: 12px 10px 4px;
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9a5a0f;
+    font-weight: 700;
+}
+
+.sidebar-nav .nav-link.nav-link-admin {
+    background: #fff7ec;
+    border: 1px solid #fde6c8;
+}
+
+.sidebar-nav .nav-link.nav-link-admin:hover {
+    background: #ffeecf;
+    border-color: #fbd9a7;
+}
+
+.app-main {
+    flex: 1;
+    min-width: 0;
+    padding: 14px;
+}
+
+/* Sidebar compact mode */
+.app-shell.sidebar-compact .app-sidebar {
+    width: 76px;
+    min-width: 76px;
+}
+
+.app-shell.sidebar-compact .sidebar-edge-toggle {
+    width: 16px;
+}
+
+.app-shell.sidebar-compact .sidebar-subtitle,
+.app-shell.sidebar-compact .sidebar-link-text,
+.app-shell.sidebar-compact .sidebar-admin-label {
+    display: none;
+}
+
+.app-shell.sidebar-compact .sidebar-title {
+    display: none;
+}
+
+.app-shell.sidebar-compact .sidebar-title-compact {
+    display: block;
+}
+
+.app-shell.sidebar-compact .sidebar-header {
+    padding: 12px 8px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+}
+
+.app-shell.sidebar-compact .sidebar-title {
+    font-size: 0.85rem;
+}
+
+.app-shell.sidebar-compact .sidebar-theme-switch {
+    margin-top: 2px;
+}
+
+.app-shell.sidebar-compact .sidebar-nav .nav-link {
+    justify-content: center;
+    text-align: center;
+    padding: 10px 6px;
+}
+
+.app-shell.sidebar-compact .sidebar-nav .nav-link i {
+    margin-right: 0 !important;
+}
