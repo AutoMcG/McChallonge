@@ -1,0 +1,45 @@
+<aside id="app-sidebar-nav" class="app-sidebar collapse d-lg-block">
+    <button
+        id="sidebar-collapse-toggle"
+        class="sidebar-edge-toggle"
+        type="button"
+        aria-label="Collapse sidebar"
+        title="Collapse sidebar"
+    ></button>
+    <div class="sidebar-header">
+        <div>
+            <div class="sidebar-title">McChallonge</div>
+            <div class="sidebar-subtitle">Navigation</div>
+            <div class="sidebar-title-compact" aria-hidden="true">McC</div>
+        </div>
+    </div>
+    <nav class="sidebar-nav nav flex-column">
+        <a class="nav-link {% if current_page == 'dashboard' %}active{% endif %}" href="{{ url_for('tournament_page') }}" title="Dashboard">
+            <i class="fas fa-house me-2"></i><span class="sidebar-link-text">Dashboard</span>
+        </a>
+        <a class="nav-link {% if current_page == 'participants' %}active{% endif %}" href="{{ url_for('participants_page') }}" title="Robots">
+            <i class="fas fa-users me-2"></i><span class="sidebar-link-text">Robots</span>
+        </a>
+        <a class="nav-link {% if current_page == 'matches' %}active{% endif %}" href="{{ url_for('matches_page') }}" title="Matches">
+            <i class="fas fa-gamepad me-2"></i><span class="sidebar-link-text">Matches</span>
+        </a>
+        <a class="nav-link {% if current_page == 'notifications-subscriptions' %}active{% endif %}" href="{{ url_for('notifications_subscriptions_page') }}" title="Robot Subscriptions">
+            <i class="fas fa-bell me-2"></i><span class="sidebar-link-text">Robot Subscriptions</span>
+        </a>
+        <a class="nav-link {% if current_page == 'notifications-inbox' %}active{% endif %}" href="{{ url_for('notifications_inbox_page') }}" title="Notification Inbox">
+            <i class="fas fa-inbox me-2"></i><span class="sidebar-link-text">Notification Inbox</span>
+        </a>
+        {% if admin_enabled %}
+        <div class="sidebar-admin-label"><i class="fas fa-lock me-1"></i><span class="sidebar-link-text">Admin only</span></div>
+        <a class="nav-link nav-link-admin {% if current_page == 'queue' %}active{% endif %}" href="{{ url_for('queue_page') }}" title="Queue">
+            <i class="fas fa-list-check me-2"></i><span class="sidebar-link-text">Queue</span>
+        </a>
+        <a class="nav-link nav-link-admin {% if current_page == 'notifications-admin' %}active{% endif %}" href="{{ url_for('notifications_admin_page') }}" title="Notifications Admin">
+            <i class="fas fa-clipboard-list me-2"></i><span class="sidebar-link-text">Notifications Admin</span>
+        </a>
+        <a class="nav-link nav-link-admin {% if current_page == 'underway' %}active{% endif %}" href="{{ url_for('underway_page') }}" title="Underway">
+            <i class="fas fa-flag me-2"></i><span class="sidebar-link-text">Underway</span>
+        </a>
+        {% endif %}
+    </nav>
+</aside>
