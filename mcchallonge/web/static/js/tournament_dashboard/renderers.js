@@ -265,6 +265,9 @@ export function renderMatches(matches) {
                 const canClearUnderway = config.adminEnabled
                     && config.showOnly === 'queue'
                     && isUnderway;
+                const canNotifyBoth = config.adminEnabled
+                    && config.showOnly === 'queue'
+                    && state !== 'complete';
                 const tournamentBadge = multiTournament
                     ? `<span class="tournament-badge">${escapeHtml(match._tournament_name || '')}</span>`
                     : '';
@@ -281,6 +284,13 @@ export function renderMatches(matches) {
                          data-tournament-key="${escapeAttribute(tournamentKey)}"
                          data-match-id="${escapeAttribute(match.id)}">
                         <i class="fas fa-times me-1"></i>Clear Underway
+                    </button>`
+                    : '';
+                const notifyBothButton = canNotifyBoth
+                    ? `<button type="button" class="btn btn-sm btn-outline-primary match-notify-both-btn"
+                         data-tournament-key="${escapeAttribute(tournamentKey)}"
+                         data-match-id="${escapeAttribute(match.id)}">
+                        <i class="fas fa-bell me-1"></i>Notify Both Robots
                     </button>`
                     : '';
                 return `
@@ -305,6 +315,7 @@ export function renderMatches(matches) {
                             </span>
                             ${match.completed_at ? `<span class="date">${escapeHtml(match.completed_at)}</span>` : ''}
                             ${tournamentBadge}
+                            ${notifyBothButton}
                             ${underwayButton}
                             ${clearUnderwayButton}
                         </div>

@@ -218,3 +218,27 @@ export async function clearMatchUnderway(tournamentKey, matchId) {
     emitDashboardDataLoadedAndResetSelection(data);
     emitStatus('Underway status cleared.', 'success');
 }
+
+export async function notifyMatchQueueCall(tournamentKey, matchId) {
+    if (!tournamentKey || matchId == null) {
+        throw new Error('Missing tournament key or match id.');
+    }
+
+    const response = await fetch(config.apiNotifyMatchQueueCallUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            tournament_key: String(tournamentKey),
+            match_id: String(matchId),
+        }),
+    });
+
+    if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload.error || 'Failed to notify robots for this match.');
+    }
+
+    const payload = await response.json();
+    const count = Array.isArray(payload.notifications) ? payload.notifications.length : 0;
+    emitStatus(`Sent queue notifications for ${count} robot(s).`, 'success');
+}

@@ -6,7 +6,7 @@ import { initializeConfig, config, activeMatchSearchMode, setActiveMatchSearchMo
 import { loadMatchSearchChips, renderMatchSearchChips, clearAllMatchSearchChips, addMatchSearchChip } from './search-chips.js';
 import { loadMatchSearchMode, saveMatchSearchMode } from './search-mode.js';
 import { getById, setStatusMessage } from './helpers.js';
-import { loadLocalCache, updateLocalCache, clearLocalCache, syncFromChallonge, setMatchUnderway, clearMatchUnderway } from './api.js';
+import { loadLocalCache, updateLocalCache, clearLocalCache, syncFromChallonge, setMatchUnderway, clearMatchUnderway, notifyMatchQueueCall } from './api.js';
 import { renderDashboard } from './dashboard.js';
 import { dashboardEvents, DASHBOARD_EVENT } from './events.js';
 import { getFilteredMatches, getFilteredParticipants } from './filters.js';
@@ -184,7 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const matchesContainer = getById('matches-container');
     if (matchesContainer) {
         matchesContainer.addEventListener('click', async (event) => {
-            const button = event.target.closest('.match-underway-btn, .match-clear-underway-btn');
+            const button = event.target.closest('.match-underway-btn, .match-clear-underway-btn, .match-notify-both-btn');
             if (!button) return;
 
             const tournamentKey = button.dataset.tournamentKey;
@@ -197,11 +197,16 @@ document.addEventListener('DOMContentLoaded', () => {
             button.disabled = true;
             const original = button.innerHTML;
             const isClearAction = button.classList.contains('match-clear-underway-btn');
+            const isNotifyAction = button.classList.contains('match-notify-both-btn');
             button.innerHTML = isClearAction
                 ? '<i class="fas fa-spinner fa-spin me-1"></i>Clearing...'
-                : '<i class="fas fa-spinner fa-spin me-1"></i>Setting...';
+                : isNotifyAction
+                    ? '<i class="fas fa-spinner fa-spin me-1"></i>Notifying...'
+                    : '<i class="fas fa-spinner fa-spin me-1"></i>Setting...';
             try {
-                if (isClearAction) {
+                if (isNotifyAction) {
+                    await notifyMatchQueueCall(tournamentKey, matchId);
+                } else if (isClearAction) {
                     await clearMatchUnderway(tournamentKey, matchId);
                 } else {
                     await setMatchUnderway(tournamentKey, matchId);

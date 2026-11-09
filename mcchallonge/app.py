@@ -25,6 +25,13 @@ from mcchallonge.services.participant_images import (
     load_approved_participants_index,
     prewarm_approved_participant_images,
 )
+from mcchallonge.services.notifications import (
+    ALLOWED_NOTIFICATION_TYPES,
+    build_robot_directory,
+    create_notification,
+    list_all_notifications,
+    list_notifications_for_robot_keys,
+)
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -106,6 +113,23 @@ def _render_client_dashboard(title: str, show_only: str | None = None):
         logo_url=_resolve_logo_url(),
     )
 
+
+def _render_notifications_page(title: str, page_mode: str):
+    admin_enabled = _admin_enabled()
+    return render_template(
+        'notifications.jinja.html',
+        title=title,
+        current_date=time.strftime("%Y-%m-%d %H:%M"),
+        logo_url=_resolve_logo_url(),
+        page_mode=page_mode,
+        admin_enabled=admin_enabled,
+        api_notifications_robots_url=url_for('notifications_robots'),
+        api_notifications_subscribed_url=url_for('notifications_subscribed'),
+        api_notifications_send_url=(url_for('notifications_send') if admin_enabled else ''),
+        api_notifications_audit_url=(url_for('notifications_audit') if admin_enabled else ''),
+    )
+
+
 @app.route('/')
 def root_page():
     """Redirect root to /index.html for live server parity with static output."""
@@ -141,6 +165,25 @@ def queue_page():
         admin_enabled=_admin_enabled(),
         logo_url=_resolve_logo_url(),
     )
+
+
+@app.route('/notifications/subscriptions')
+def notifications_subscriptions_page():
+    """Render robot notification subscription preferences page."""
+    return _render_notifications_page("Robot Subscriptions", page_mode="subscriptions")
+
+
+@app.route('/notifications/inbox')
+def notifications_inbox_page():
+    """Render notification inbox page."""
+    return _render_notifications_page("Notification Inbox", page_mode="inbox")
+
+
+@app.route('/notifications/admin')
+def notifications_admin_page():
+    """Render admin notifications page (loopback only)."""
+    _require_loopback()
+    return _render_notifications_page("Admin Notifications", page_mode="admin")
 
 
 @app.route('/underway')
@@ -207,6 +250,165 @@ def cache_data():
     if data is None:
         return jsonify({"error": "Local cache file not found. Click 'Update Local Cache' to create it."}), 404
     return jsonify(data)
+
+
+@app.route('/api/notifications/robots', methods=['GET'])
+def notifications_robots():
+    """Return canonical robot directory for notification subscriptions."""
+    data = load_cached_tournament_data()
+    if data is None:
+        return jsonify({"error": "Local cache file not found. Click 'Update Local Cache' to create it."}), 404
+    robots = build_robot_directory(data)
+    return jsonify({"robots": robots})
+
+
+@app.route('/api/notifications/subscribed', methods=['POST'])
+def notifications_subscribed():
+    """Return notifications only for subscribed robot keys."""
+    body = request.get_json(silent=True) or {}
+    robot_keys = body.get('robot_keys')
+    if not isinstance(robot_keys, list):
+        return jsonify({"error": "'robot_keys' must be an array of robot key strings."}), 400
+
+    keys = {
+        str(value).strip()
+        for value in robot_keys
+        if isinstance(value, str) and str(value).strip()
+    }
+    notifications = list_notifications_for_robot_keys(keys)
+    return jsonify({"notifications": notifications})
+
+
+@app.route('/api/notifications/send', methods=['POST'])
+def notifications_send():
+    """Create one notification for a selected robot (admin only)."""
+    _require_loopback()
+    body = request.get_json(silent=True) or {}
+    robot_key = str(body.get('robot_key') or '').strip()
+    notification_type = str(body.get('type') or '').strip()
+    message = body.get('message')
+
+    if not robot_key:
+        return jsonify({"error": "'robot_key' is required."}), 400
+    if notification_type not in ALLOWED_NOTIFICATION_TYPES:
+        return jsonify({"error": f"'type' must be one of: {sorted(ALLOWED_NOTIFICATION_TYPES)}"}), 400
+
+    data = load_cached_tournament_data()
+    if data is None:
+        return jsonify({"error": "Local cache file not found. Click 'Update Local Cache' to create it."}), 400
+
+    robot_directory = build_robot_directory(data)
+    robot = next((entry for entry in robot_directory if entry.get('robot_key') == robot_key), None)
+    if robot is None:
+        return jsonify({"error": f"Robot key '{robot_key}' was not found in local cache."}), 400
+
+    try:
+        notification = create_notification(
+            notification_type=notification_type,
+            robot_key=robot_key,
+            tournament_key=str(robot.get('tournament_key') or ''),
+            competition_name=str(robot.get('competition_name') or ''),
+            bot_name=str(robot.get('bot_name') or ''),
+            team_name=str(robot.get('team_name') or ''),
+            participant_id=robot.get('participant_id'),
+            message=str(message or ''),
+        )
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        logger.exception("Failed to create notification")
+        return jsonify({"error": f"Failed to create notification: {exc}"}), 500
+
+    return jsonify({"notification": notification}), 201
+
+
+@app.route('/api/notifications/match/queue-call', methods=['POST'])
+def notifications_match_queue_call():
+    """Create queue-call notifications for both robots in a match (admin only)."""
+    _require_loopback()
+    body = request.get_json(silent=True) or {}
+    tournament_key = str(body.get('tournament_key') or '').strip()
+    match_id = str(body.get('match_id') or '').strip()
+
+    if not tournament_key or not match_id:
+        return jsonify({"error": "Both 'tournament_key' and 'match_id' are required."}), 400
+
+    data = load_cached_tournament_data()
+    if data is None:
+        return jsonify({"error": "Local cache file not found. Click 'Update Local Cache' to create it."}), 400
+
+    tournaments = data.get('tournaments') or {}
+    entry = tournaments.get(tournament_key)
+    if not entry:
+        return jsonify({"error": f"Tournament '{tournament_key}' was not found in local cache."}), 400
+
+    matches = entry.get('matches') or []
+    target_match = next((m for m in matches if str(m.get('id')) == match_id), None)
+    if target_match is None:
+        return jsonify({"error": f"Match '{match_id}' was not found in tournament '{tournament_key}'."}), 400
+
+    participants = entry.get('participants') or []
+    participants_by_id = {str(p.get('id')): p for p in participants if p.get('id') is not None}
+    robot_directory = build_robot_directory(data)
+
+    created_notifications = []
+    seen_robot_keys = set()
+
+    for player_id in (target_match.get('player1_id'), target_match.get('player2_id')):
+        if player_id is None:
+            continue
+        participant = participants_by_id.get(str(player_id))
+        if not participant:
+            continue
+
+        bot_name = str(participant.get('name') or '').strip()
+        robot = next(
+            (
+                row
+                for row in robot_directory
+                if str(row.get('tournament_key')) == tournament_key
+                and (
+                    row.get('participant_id') == player_id
+                    or str(row.get('bot_name') or '').strip().lower() == bot_name.lower()
+                )
+            ),
+            None,
+        )
+        if not robot:
+            continue
+
+        robot_key = str(robot.get('robot_key') or '').strip()
+        if not robot_key or robot_key in seen_robot_keys:
+            continue
+        seen_robot_keys.add(robot_key)
+
+        try:
+            notification = create_notification(
+                notification_type='queue_call',
+                robot_key=robot_key,
+                tournament_key=str(robot.get('tournament_key') or tournament_key),
+                competition_name=str(robot.get('competition_name') or ''),
+                bot_name=str(robot.get('bot_name') or bot_name),
+                team_name=str(robot.get('team_name') or ''),
+                participant_id=robot.get('participant_id'),
+                message='Please queue at the arena.',
+            )
+            created_notifications.append(notification)
+        except Exception as exc:
+            logger.exception("Failed to create queue-call notification for match")
+            return jsonify({"error": f"Failed to create queue-call notification: {exc}"}), 500
+
+    if not created_notifications:
+        return jsonify({"error": "No eligible robots were found to notify for this match."}), 400
+
+    return jsonify({"notifications": created_notifications}), 201
+
+
+@app.route('/api/notifications/audit', methods=['GET'])
+def notifications_audit():
+    """Return full notification audit log (admin only)."""
+    _require_loopback()
+    return jsonify({"notifications": list_all_notifications()})
 
 
 def _require_loopback():
@@ -314,6 +516,8 @@ def url_generator():
     yield '/participants'
     yield '/matches'
     yield '/queue'
+    yield '/notifications/subscriptions'
+    yield '/notifications/inbox'
     yield '/underway'
     yield '/api/underway'
     # Freeze the cache JSON so the static build can serve tournament data.
@@ -411,4 +615,3 @@ def main(argv: list[str] | None = None) -> None:
 
 if __name__ == '__main__':
     main()
-

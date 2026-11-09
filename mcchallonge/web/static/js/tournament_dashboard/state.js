@@ -6,6 +6,7 @@ export const config = {
     apiCacheUrl: '/api/cache',
     apiCacheUpdateUrl: '/api/cache/update',
     apiCacheClearUrl: '/api/cache/clear',
+    apiNotifyMatchQueueCallUrl: '/api/notifications/match/queue-call',
     underwaySourceMode: 'challonge',
     clientDataMode: 'api',
     clientDataRoot: '/data',
@@ -19,6 +20,7 @@ export function initializeConfig() {
     config.apiCacheUrl = cfg.apiCacheUrl || '/api/cache';
     config.apiCacheUpdateUrl = cfg.apiCacheUpdateUrl || '/api/cache/update';
     config.apiCacheClearUrl = cfg.apiCacheClearUrl || '/api/cache/clear';
+    config.apiNotifyMatchQueueCallUrl = cfg.apiNotifyMatchQueueCallUrl || '/api/notifications/match/queue-call';
     config.underwaySourceMode = cfg.underwaySourceMode || 'challonge';
     config.clientDataMode = cfg.clientDataMode || 'api';
     config.clientDataRoot = cfg.clientDataRoot || '/data';

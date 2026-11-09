@@ -227,6 +227,32 @@ body {
     font-size: 0.9rem;
 }
 
+.header-action-btn {
+    background-color: rgba(255, 255, 255, 0.95);
+    color: var(--secondary-color);
+    border-color: rgba(255, 255, 255, 0.95);
+    font-weight: 600;
+}
+
+.header-action-btn:hover,
+.header-action-btn:focus {
+    background-color: #ffffff;
+    color: var(--secondary-color);
+    border-color: #ffffff;
+}
+
+.subscription-pill {
+    border: 1px solid rgba(13, 110, 253, 0.2);
+}
+
+.notification-unread {
+    background-color: #fff3e6;
+}
+
+.notification-read {
+    background-color: #f8f9fa;
+}
+
 .controls {
     margin-top: 15px;
     display: flex;

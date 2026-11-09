@@ -35,6 +35,7 @@
             apiCacheUrl: {{ url_for('cache_data') | tojson }},
             apiCacheUpdateUrl: {{ (url_for('cache_data_update') if admin_enabled and (client_data_mode or 'api') != 'fixed' else '') | tojson }},
             apiCacheClearUrl: {{ (url_for('cache_data_clear') if (client_data_mode or 'api') != 'fixed' else '') | tojson }},
+            apiNotifyMatchQueueCallUrl: {{ (url_for('notifications_match_queue_call') if admin_enabled and (client_data_mode or 'api') != 'fixed' else '') | tojson }},
             underwaySourceMode: {{ (underway_source_mode or 'challonge') | tojson }},
             clientDataMode: {{ (client_data_mode or 'api') | tojson }},
             clientDataRoot: {{ (client_data_root or '/data') | tojson }},
