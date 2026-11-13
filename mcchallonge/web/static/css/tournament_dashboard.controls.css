@@ -1,0 +1,227 @@
+/* Dashboard controls */
+.controls {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.underway-source-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.underway-source-control label {
+    white-space: nowrap;
+}
+
+.underway-source-control .form-select {
+    min-width: 260px;
+    background-color: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+}
+
+.underway-source-control .form-select option {
+    color: #1f2937;
+}
+
+/* Status and empty states */
+.cache-meta {
+    opacity: 0.95;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.status-message {
+    margin-bottom: 20px;
+    display: none;
+}
+
+.empty-state {
+    color: #7f8c8d;
+    text-align: center;
+    padding: 20px;
+}
+
+/* Tournament and match filters */
+.filter-input {
+    max-width: 200px;
+    background-color: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+}
+
+.filter-input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.filter-input:focus {
+    background-color: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.5);
+    color: white;
+    box-shadow: none;
+}
+
+#match-state-filters .form-check-label,
+#tournament-filters .form-check-label {
+    color: white;
+    font-size: 0.85rem;
+    font-weight: normal;
+}
+
+#match-state-filters .form-check-input,
+#tournament-filters .form-check-input {
+    cursor: pointer;
+}
+
+.tournament-col {
+    display: none;
+}
+
+.multi-tournament .tournament-col {
+    display: table-cell;
+}
+
+.tournament-badge {
+    margin-top: 4px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    background-color: rgba(52, 152, 219, 0.15);
+    color: var(--secondary-color);
+    display: inline-block;
+}
+
+/* Match filter toolbar */
+.matches-filter-toolbar {
+    justify-content: center;
+    width: 100%;
+}
+
+.matches-filter-panel {
+    align-items: center;
+}
+
+#match-bracket-filters,
+#match-state-filters,
+.match-filter-controls,
+.match-filter-chips,
+.match-filter-helper {
+    justify-content: center;
+    text-align: center;
+}
+
+.match-filter-input {
+    width: min(420px, 100%);
+    min-width: 280px;
+}
+
+.match-filter-controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.match-filter-mode-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.match-filter-mode-group .form-check {
+    margin-bottom: 0;
+}
+
+/* Robot thumbnails */
+.bot-thumb {
+    width: 56px;
+    height: 56px;
+    border-radius: 6px;
+    object-fit: cover;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    background: #ffffff;
+    flex-shrink: 0;
+}
+
+.bot-thumb-sm {
+    width: 50px;
+    height: 50px;
+    border-radius: 5px;
+}
+
+.bot-thumb-placeholder {
+    color: #9aa4ad;
+    background: #f4f6f8;
+}
+
+.participant-name-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.player-last-fought {
+    margin-left: auto;
+    font-size: 0.78rem;
+    color: #5d6d7e;
+    white-space: nowrap;
+}
+
+.match-filter-mode-group .form-check-label {
+    color: #fff;
+    font-size: 0.85rem;
+}
+
+/* Filter chips */
+.match-filter-chips {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    min-height: 28px;
+}
+
+.match-filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    border-radius: 999px;
+    padding: 2px 10px;
+    font-size: 0.8rem;
+}
+
+.match-filter-chip-edit {
+    border: none;
+    background: transparent;
+    color: #fff;
+    font-size: 0.8rem;
+    cursor: pointer;
+    padding: 0;
+    text-align: left;
+}
+
+.match-filter-chip-remove {
+    border: none;
+    background: transparent;
+    color: #fff;
+    font-size: 0.9rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+}
+
+.match-filter-chip-empty {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.8rem;
+}

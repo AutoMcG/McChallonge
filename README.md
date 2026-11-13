@@ -214,6 +214,9 @@ Then open:
 - http://127.0.0.1:5000/ — overview
 - http://127.0.0.1:5000/participants — participant list
 - http://127.0.0.1:5000/matches — match list, filterable by bracket and status
+- http://127.0.0.1:5000/notifications/subscriptions — choose robot subscriptions for browser alerts
+- http://127.0.0.1:5000/notifications/inbox — view subscribed notifications and mark local read state
+- http://127.0.0.1:5000/notifications/admin — send/audit notifications (loopback admin only)
 
 The dashboard loads from a local JSON cache (`build/tournament_cache.json` by default).
 Use the **Update Local Cache** button in the UI to pull fresh data from Challonge.

@@ -1,0 +1,201 @@
+/* Tablet and small desktop */
+@media (max-width: 991px) {
+    body {
+        padding: 12px;
+    }
+
+    .app-shell {
+        display: block;
+        min-height: auto;
+    }
+
+    .app-sidebar {
+        width: 100%;
+        min-width: 0;
+        height: auto;
+        position: static;
+        margin-bottom: 10px;
+    }
+
+    .sidebar-edge-toggle {
+        width: 12px;
+    }
+
+    .app-shell.sidebar-compact .app-sidebar {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .app-shell.sidebar-compact .sidebar-subtitle,
+    .app-shell.sidebar-compact .sidebar-link-text,
+    .app-shell.sidebar-compact .sidebar-admin-label {
+        display: inline;
+    }
+
+    .app-shell.sidebar-compact .sidebar-nav .nav-link {
+        justify-content: flex-start;
+        text-align: left;
+        padding: 10px 12px;
+    }
+
+    .app-shell.sidebar-compact .sidebar-nav .nav-link i {
+        margin-right: 0.5rem !important;
+    }
+
+    .app-main {
+        padding: 0;
+    }
+
+    .tournament-header {
+        padding: 24px;
+    }
+
+    .tournament-header .status {
+        position: static;
+        display: inline-flex;
+        margin-top: 12px;
+    }
+
+    .logo-container {
+        position: static;
+        margin-top: 18px;
+        width: 96px;
+        height: 96px;
+    }
+
+    .controls {
+        align-items: stretch;
+    }
+
+    .controls > * {
+        flex: 1 1 220px;
+    }
+
+    .underway-source-control,
+    .match-filter-controls,
+    .match-filter-mode-group {
+        width: 100%;
+    }
+
+    .underway-source-control {
+        flex-wrap: wrap;
+    }
+
+    .underway-source-control .form-select,
+    .filter-input,
+    .match-filter-input {
+        width: 100%;
+        max-width: none;
+        min-width: 0;
+    }
+
+    .cache-meta,
+    #tournament-filters,
+    #match-bracket-filters,
+    #match-state-filters,
+    #match-text-filter-chips {
+        width: 100%;
+    }
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+    body {
+        padding: 8px;
+    }
+
+    .card {
+        margin-bottom: 18px;
+    }
+
+    .card:hover {
+        transform: none;
+    }
+
+    .match {
+        flex-direction: column;
+        padding: 12px;
+    }
+
+    .match .players {
+        flex-direction: column;
+    }
+
+    .tournament-header {
+        padding: 18px;
+        margin-bottom: 18px;
+    }
+
+    .tournament-header h1 {
+        font-size: 1.8rem;
+    }
+
+    .tournament-header p {
+        font-size: 0.95rem;
+    }
+
+    .controls > * {
+        flex: 1 1 100%;
+    }
+
+    .controls .btn,
+    .match-filter-controls .btn {
+        width: 100%;
+    }
+
+    .match-filter-controls {
+        gap: 8px;
+    }
+
+    .match-filter-mode-group {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .match .player {
+        margin-right: 0;
+        width: 100%;
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+
+    .match .vs {
+        justify-content: center;
+        padding: 8px 0;
+    }
+
+    .match .match-info {
+        margin-top: 12px;
+        min-width: 0;
+        gap: 6px;
+    }
+
+    .bot-thumb,
+    .bot-thumb-sm {
+        width: 42px;
+        height: 42px;
+    }
+
+    .player-last-fought {
+        width: 100%;
+        margin-left: 0;
+        padding-left: 52px;
+        white-space: normal;
+    }
+
+    .footer {
+        margin-top: 20px;
+        padding: 12px 0 4px;
+        font-size: 0.82rem;
+    }
+
+    .footer p {
+        margin-bottom: 0.5rem;
+    }
+
+    .logo-container {
+        width: 80px;
+        height: 80px;
+        margin-top: 14px;
+    }
+}

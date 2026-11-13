@@ -1,0 +1,12 @@
+/* Notification cards */
+.subscription-pill {
+    border: 1px solid rgba(13, 110, 253, 0.2);
+}
+
+.notification-unread {
+    background-color: #fff3e6;
+}
+
+.notification-read {
+    background-color: #f8f9fa;
+}

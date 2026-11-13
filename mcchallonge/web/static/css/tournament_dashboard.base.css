@@ -1,0 +1,6 @@
+/* Base dashboard modules */
+@import url('./tournament_dashboard.layout.css');
+@import url('./tournament_dashboard.presentation.css');
+@import url('./tournament_dashboard.notifications.css');
+@import url('./tournament_dashboard.controls.css');
+@import url('./tournament_dashboard.responsive.css');
